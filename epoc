@@ -1,0 +1,47 @@
+#!/usr/bin/php -qC
+<?
+$usage = <<<END
+epoc <stamp>		- Convert from stamp
+epoc today		- Display the timestamp of today
+epoc yesteray		- Display the timestamp of yesterday
+epoc yyyy-mm-dd		- Convert the date into a timestamp
+epoc			- Just display the current unix time
+
+Various utilities to return and manage unix timestamps
+END;
+
+$method = (isset($_SERVER['argv'][1])) ? $_SERVER['argv'][1] : 'now';
+
+switch ($method) {
+	case 'today':
+		$day = getdate(time());
+		echo "Today is\n";
+		echo mktime($hour,$minute,$second,$day['mon'],$day['mday'],$day['year']);
+		break;
+	case 'yesterday':
+		$day = getdate(strtotime('-1 day'));
+		echo "Yesterday is\n";
+		echo mktime($hour,$minute,$second,$day['mon'],$day['mday'],$day['year']);
+		break;
+	default:
+		if (count($_SERVER['argv']) > 1) {
+			if (preg_match('/^([0-9]{4})-([0-9]{2})-([0-9]{2})$/', $_SERVER['argv'][1], $matches)) { // Convert from Y-m-d
+				echo "{$matches[1]}-{$matches[2]}-{$matches[3]} converts to\n";
+				echo mktime(0,0,0, $matches[2], $matches[3], $matches[1]);
+			} else if (preg_match('/^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$/', $_SERVER['argv'][1], $matches)) { // Convert from Y-m-d H:i
+				echo "{$matches[1]}-{$matches[2]}-{$matches[3]} {$matches[4]}:{$matches[5]} converts to\n";
+				echo mktime($matches[4],$matches[5],0, $matches[2], $matches[3], $matches[1]);
+			} elseif (preg_match('/^[0-9]+$/', $_SERVER['argv'][1])) { // Convert from
+				echo "Epoc {$_SERVER['argv'][1]} is\n";
+				echo date('d/m/Y H:i', $_SERVER['argv'][1]) . " (" . date_default_timezone_get() . ")\n";
+				echo gmdate('d/m/Y H:i', $_SERVER['argv'][1]) . " @ GMT";
+			} else {
+				echo "Unknown argument: '{$_SERVER['argv'][1]}'";
+			}
+		} else {
+			echo "Epoc now is\n";
+			echo mktime();
+		}
+}
+echo "\n";
+?>

@@ -1,0 +1,21 @@
+#!/bin/bash
+USAGE1="Usage: mvto <destination> <file1> [file2...]"
+USAGE2="Convenience wrapper to move multiple files to a given directory"
+USAGE3="Matt Carter <m@ttcarter.com>"
+
+if [ "$#" -eq 0 ]; then
+	echo "$USAGE1"
+	echo "$USAGE2"
+	echo "$USAGE3"
+	exit 1
+fi
+
+TARGET=$1
+shift
+
+if [ ! -d "$TARGET" ]; then
+	echo "The first argument, '$TARGET', must be a directory"
+	exit 1
+fi
+
+mv --target-directory="$TARGET" "$@"

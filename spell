@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+spell - Very simple command line spellcheker
+
+=head1 SYNOPSIS
+	spell [words...]
+
+=head1 OPTIONS
+
+=over 8
+
+=head1 INSTALL
+
+This module requires Text:Aspell to function. It can be easily installed either though CPAN or via `apt-get install libtext-aspell-perl`
+
+=head1 BUGS
+
+Quite probably.
+
+=head1 AUTHOR
+
+Matt Carter <m@ttcarter.com>
+
+=cut
+
+use Text::Aspell;
+my $speller = Text::Aspell->new;
+
+die unless $speller;
+
+# Set some options
+$speller->set_option('lang','en_US');
+$speller->set_option('sug-mode','fast');
+
+foreach (@ARGV) {
+# check a word
+	if ($speller->check($_)) {
+		print "$_\tOK\n";
+	} elsif(@suggestions = $speller->suggest($_)) {
+		print "$_\t@suggestions\n";
+	} else {
+		print "$_\tUNKNOWN\n";
+	}
+}

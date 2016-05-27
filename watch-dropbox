@@ -1,0 +1,18 @@
+#!/bin/bash
+# Script to watch what files Dropbox is currently accessing
+#
+# Usage: watch-dropbox
+#
+
+# Prefix of DB filesystem
+PREFIX="/home/mc/Dropbox"
+
+DBPID=`ps -C 'dropbox' -o '%p' | tr -d ' \nPID'` 
+if [ -z "$DBPID" ]; then
+	echo "No dropbox PID can be found"
+	exit 1
+fi
+
+echo "Watching Dropbox (PID=$DBPID)..."
+
+sudo strace -p "$DBPID" -f -e open 2>&1 | grep -v '\.dropbox' | cut -d'"' -f 2 | grep "$PREFIX" | uniq

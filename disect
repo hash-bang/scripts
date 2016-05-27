@@ -1,0 +1,17 @@
+#!/bin/bash
+# Usage <file1> [file2...]
+# Splits a file into segments of a given size
+
+SPLITSIZE=100000000
+for FILE in "$*"; do
+	echo "Disecting $FILE..."
+	FILESIZE=$(stat -c%s "$FILE")
+	if [ "$FILESIZE" -lt "$SPLITSIZE" ]; then
+		echo " * No need to disect. Less than maxiumum"
+		echo mv "$FILE" ~/dispatch
+	else
+		echo split --bytes "$SPLITSIZE" --verbose "$FILE" "$FILE."
+		echo mv "$FILE.??" ~/dispatch
+		echo rm "$FILE"
+	fi
+done

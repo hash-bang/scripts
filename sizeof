@@ -1,0 +1,27 @@
+#!/bin/bash
+# Get the size of the provided globbed files
+# Ignores directories and only retrieves explicit files (i.e. will not recurse)
+# Usage: sizeof [files...]
+
+TOTALCOUNT=0
+TOTALSIZE=0
+
+for FILE in "$@"; do
+	if [ ! -e "$FILE" ]; then
+		echo "Skipping non-existant file '$FILE'"
+	elif [ -d "$FILE" ]; then
+		echo "Skipping directory '$FILE'"
+	else
+		SIZE=`ls -dl "$FILE" | cut -d ' ' -f 5`
+		if [ "$?" != 0 ]; then
+			echo "Error getting size of '$FILE'"
+		else
+			echo "SIZEOF $FILE = $SIZE"
+			TOTALCOUNT=$(( $TOTALCOUNT +1 ))
+			TOTALSIZE=$(( $TOTALSIZE + $SIZE ))
+		fi
+	fi
+done
+
+echo "Files: $TOTALCOUNT"
+echo "Total Size: $TOTALSIZE ("`echo "$TOTALSIZE" | awk '{print $1/(1024*1024)}'` "mb)"

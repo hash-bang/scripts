@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+# Usage: mkrelative [options] link...
+# Make a series of absolute Symlinks relative
+use Cwd;
+use Getopt::Long qw/:config bundling auto_help/;
+use Pod::Usage;
+GetOptions(
+	'verbose|v+' => \$verbose,
+	'dryrun|n' => \$dryrun,
+	'help|h' => sub { pod2usage(1) },
+);
+$SL = '/'; # Path seperator
+
+# The following code is cheerfully stolen from File::PathConvert by Shigio Yamaguchi (http://cpansearch.perl.org/src/SHIGIO/File-PathConvert-0.4/PathConvert.pm) {{{
+sub regularize {
+	my($reg);
+	$reg = '^' . $SL . '\.\.' . $SL;
+	while ($_[0] =~ /$reg/) { # ^/../	-> /
+		$_[0] =~ s/$reg/$SL/;
+	}
+	$reg = $SL . '\.' . $SL;
+	while ($_[0] =~ /$reg/) {
+		$_[0] =~ s/$reg/$SL/; # /./ -> /
+	}
+	$reg = $SL . '+';
+	$_[0] =~ s/$reg/$SL/g; # ///  -> /
+	$reg = '(.+)' . $SL . '$';
+	$_[0] =~ s/$reg/$1/; # remove last /
+	$reg = '(.+)' . $SL . '\.$';
+	$_[0] =~ s/$reg/$1/g; # remove last /.
+	$_[0] = '/' if $_[0] eq '/.';
+}
+
+sub realpath($;) {
+	($resolved) = @_;
+	my($backdir) = cwd();
+	my($dirname, $basename, $links, $reg);
+	
+	regularize($resolved);
+	if ($resolved =~ /$SL/) { # Find the dirname and basename.
+		$reg = '^(.*)' . $SL . '([^' . $SL . ']*)$';
+		($dirname, $basename) = $resolved =~ /$reg/;
+		$dirname = $SL if (!$dirname);
+		$resolved = $dirname;
+		unless (chdir($dirname)) {
+			warn("realpath: chdir($dirname) failed: $! (in ${\cwd()}).") if $verbose;
+			chdir($backdir);
+			return undef;
+		}
+	} else {
+		$dirname = '';
+		$basename = $resolved;
+	}
+	$resolved = cwd(); # Get the current directory name and append the basename.
+	if ($basename) {
+		$resolved .= $SL if ($resolved ne $SL);
+		$resolved .= $basename
+	}
+	chdir($backdir);
+	return $resolved;
+}
+# }}} End of code from File::PathConvert
+
+foreach (@ARGV) {
+	$_ = realpath($_);
+	unless ($real = readlink) {
+		print STDERR "Not a symlink: $_\n" if $verbose;
+		next;
+	}
+	print "Processing $_ => $real\n" if $verbose > 1;
+	if ($real =~ /\.\./) {
+		print STDERR "Already a relative symlink: $_ => $real\n" if $verbose;
+		next;
+	}
+
+	my $shared = 0; # Number of shared elements between @dir and @dst
+	my @dir = split('/', $_);
+	my @dst = split('/', $real);
+	$shared++ while (@dir and @dst and $dir[$shared] eq $dst[$shared]);
+	$repoint = '../' x (scalar(@dir) - $shared - 1) . join($SL, @dst[$shared..scalar(@dst)-1]);
+
+	print "$_ => $repoint\n" if $verbose or $dryrun;
+	unless ($dryrun) {
+		unlink($_);
+		symlink($repoint, $_);
+	}
+}
+__END__
+
+=head1 NAME
+
+mkrelative - Make absolute symlinks relative
+
+=head1 SYNOPSIS
+
+	mkrelative [options] link...
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<d[ryrun]> or B<-n>
+
+Dont actually do anything.
+
+=item B<h[elp]> or B<-?>
+
+Display usage information.
+
+=item B<-v[erbose]>
+
+Be verbose. Use multiple times to be more verbose
+
+=item B<items ...>
+
+List of symlinks to make relative
+
+=back
+
+=head1 DESCRIPTION
+
+A tool to transform absolute symlinks into relative symlinks.
+None symlinks will raise an error (if -verbose is on) as will already relative symlinks.
+
+=head1 EXAMPLES
+
+=over 8
+
+=item B<mkrelative link1>
+
+Make the symlink link1 relative.
+
+=item B<find -type l | xargs mkrelative>
+
+Make all symlinks located by the 'find' command relative.
+
+=back
+
+=head1 BUGS
+
+Quite probably. Please report to http://hash-bang.net/mkrelative
+
+=head1 AUTHOR
+
+Matt Carter <m@ttcarter.com>
+
+=cut

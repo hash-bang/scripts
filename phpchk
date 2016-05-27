@@ -1,0 +1,8 @@
+#!/bin/bash
+# Usage: phpchk
+# Runs a lint over all PHP files in the current directory
+# Author: Matt Carter <m@ttcarter.com>
+
+for FILE in `find -name '*.php'`; do
+	php -l "$FILE" | grep -v '^No syntax errors detected in '
+done

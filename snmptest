@@ -1,0 +1,4 @@
+#!/bin/bash
+# Usage: snmptest <URI>
+# Run a test against a remote server to check that SNMP is functioning correctly
+snmpwalk -v 1 -c public -O e "$1"

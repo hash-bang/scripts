@@ -1,0 +1,4 @@
+#!/bin/bash
+# Usage: rippng <file...>
+# Extracts PNG images from the given files, taking a shot every 5 seconds
+mplayer -sstep 5 -nosound -vo png:z=7 "$@"

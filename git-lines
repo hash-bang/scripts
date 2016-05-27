@@ -1,0 +1,5 @@
+#!/bin/bash
+# Usage: git lines
+# Return the authors of the current Git repo and their line contributions
+
+git ls-tree -r master --name-only | xargs -I {} git blame --line-porcelain {} | sed -n 's/^author //p' | sort | uniq -c | sort -rn

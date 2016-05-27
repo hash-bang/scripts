@@ -1,0 +1,11 @@
+#!/usr/bin/php -qC
+<?
+# Usage: cat data | natsort
+# Natural sort pipeline filter
+# In: img10, img1, img2 
+# Out: img1, img2, img10
+
+$a = file("php://stdin");
+natsort($a);
+echo implode('',$a);
+?>

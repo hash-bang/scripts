@@ -1,0 +1,23 @@
+#!/bin/bash
+# Usage: nogrep <expression> [additional paths]
+# Variant of Grep that only searches JS files in NodeJS like projects (e.g. Ignoring module directories)
+#
+# Features:
+#           * Case insensitive search assumed
+#           * .git, node_modules, bower_components, build automatically ignored
+
+EXP="$1"
+shift
+
+if [ -d "node_modules" ]; then
+	# Operating at root of Node project
+	grep "$EXP" --color=auto -ri --exclude-dir=node_modules --exclude-dir=bower_components --exclude-dir=.git --exclude-dir=build * "$@"
+else
+	# Fallback to normal grep syntax
+	if [ -z "$@" ]; then
+		# No specific file names specified - use all
+		grep "$EXP" --color=auto -r .
+	else
+		grep "$EXP" --color=auto -r "$@"
+	fi
+fi

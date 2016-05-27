@@ -1,0 +1,22 @@
+#!/bin/bash
+# Execute a program continuously until it returns exit 0
+# Usage: retry <command>
+#
+# @author Matt Carter <m@ttcarter.com
+# @date 2015-03-07
+
+PREFIX="\e[1m\e[34m[RETRY]\e[0m "
+SLEEP=2
+
+echo -e "${PREFIX}Run $@"
+while true; do
+	"$@"
+	EXIT="$?"
+	if [ "$EXIT" != 0 ]; then
+		echo -e "${PREFIX}Exit code '$EXIT' recieved, retrying..."
+		sleep "$SLEEP"
+	else
+		echo -e "${PREFIX}Program exited correctly, stopping"
+		break
+	fi
+done

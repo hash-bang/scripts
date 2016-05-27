@@ -1,0 +1,22 @@
+#!/bin/bash
+# Usage: mkdb <db_name>
+# Utility script to make a MySQL database with some default options
+
+# Use the following options to create a DB and make a single user account with access to the specified host
+DB="$1"
+USER=`whoami`
+PASS=""
+HOST="localhost"
+
+echo "Creating database '$DB'..."
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS $DB"
+
+if [ -z "$PASS" ]; then
+	echo "Adding user '$USER@$HOST' (no password)..."
+	mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$USER'@'$HOST'"
+else
+	echo "Adding user '$USER@$HOST' (with password)..."
+	mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$USER'@'$HOST' IDENTIFIED BY '$PASS'"
+fi
+
+echo "Done"

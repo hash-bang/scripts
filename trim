@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use feature say;
+# Trip whitespace from the beginning and end of input lines
+#
+# Usage: echo "     HELLO WORLD    " | trim
+
+while (<>) {
+	s/^\s*|\s*$//g;
+	say;
+}

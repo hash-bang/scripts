@@ -1,0 +1,4 @@
+#!/bin/bash
+# Usage: open [file,...]
+# Open a file / folder using in X
+xdg-open "$@" 2>/dev/null

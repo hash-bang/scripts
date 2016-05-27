@@ -1,0 +1,20 @@
+#!/bin/bash
+if [ "$#" -eq 0 ]; then
+	echo "Usage: $0 [database]"
+	echo "Removes all tables and all procedures from a database"
+	echo "Equivelent to doing a DROP on every element of a database"
+	echo "Author: Matt Carter <m@ttcarter.com>"
+	exit 1
+fi
+
+echo "Nuking database $1...";
+
+echo " * Removing tables..."
+TABLES=`mysqldump --add-drop-table --no-data "$1" | grep '^DROP'`
+TABLES="SET FOREIGN_KEY_CHECKS = 0;$TABLES"
+echo "$TABLES" | mysql "$1"
+
+echo " * Removing stored procedures..."
+mysql "$1" --skip-column-names -e 'SHOW PROCEDURE STATUS' | cut -f 2 | sed 's/^\(.\+\)/DROP PROCEDURE \1;/g' | mysql "$1"
+
+echo "Done"

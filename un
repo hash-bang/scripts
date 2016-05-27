@@ -1,0 +1,137 @@
+#!/usr/bin/php -qC
+<?
+/**
+* TODO:
+* 	Default to '*.zip' when no arg passed
+*/
+
+$usage = <<<END
+Usage:
+un <zip1>... [rar2]... [tar3]
+
+Uncompresses (cleverly) any type of compressed file material
+
+-c
+--cage		Cage each extracted file inside a directory of the same name (sans extension)
+
+-d
+--delete	Delete original files after successful unzip
+
+-l
+--list		List the contents of the archive (-d still works so be careful)
+
+--nc
+--nochdir	Extract files here. Do not change to the individual archives directory first
+
+-o
+--overwrite	Overwrite existing files
+
+-?
+-h
+--help		This help screen
+
+Author: Matt Carter <m@ttcarter.com>
+END;
+
+require('/home/mc/Papers/Libraries/PHP/mc/mcgetopts.php');
+$opts = mcgetopt(array(
+	'c' => array('switch' => array('c','cage'),'type' => MCGETOPT_SWITCH),
+	'd' => array('switch' => array('d','delete'),'type' => MCGETOPT_SWITCH),
+	'o' => array('switch' => array('o','overwrite'),'type' => MCGETOPT_SWITCH),
+	'h' => array('switch' => array('h','help', '?'),'type' => MCGETOPT_SWITCH),
+	'l' => array('switch' => array('l','list'),'type' => MCGETOPT_SWITCH),
+	'nc' => array('switch' => array('nc','nochdir'),'type' => MCGETOPT_SWITCH),
+	'f' => array('switch' => array('f','flatten'),'type' => MCGETOPT_SWITCH),
+	//'c' => array('switch' => 'c', 'type' => MCGETOPT_VAL, 'default' => 'defaultval'),
+	//'d' => array('switch' => 'd', 'type' => MCGETOPT_KEYVAL),
+	//'e' => array('switch' => 'e', 'type' => MCGETOPT_ACCUMULATE),
+	//'f' => array('switch' => 'f'),
+),$_SERVER['argv']);
+if ( $opts['h'] || (count($opts['cmdline']) == 0) )
+	die("$usage\n");
+
+$basedir = getcwd();
+foreach ($opts['cmdline'] as $file) {
+	chdir($basedir);
+
+	if (!file_exists($file)) {
+		echo "Cannot find file '$file'\n";
+		continue;
+	}
+	$ext = (preg_match('/\.([a-z0-9]+?)$/i',$file,$matches)) ? $matches[1] : '';
+
+	$dir = dirname($file); // Change to its dir?
+	if ( ($dir != '') && (!$opts['nc']) )
+		chdir($dir);
+	if ($opts['c']) {
+		$cage = substr($file,0,0-(strlen($ext)+1));
+		mkdir($cage);
+		chdir($cage);
+		$file = "../$file";
+	}
+
+	$args = '';
+
+	switch (strtolower($ext)) {
+		case 'zip':
+			echo "Unzipping $file...\n";
+			if ($opts['l']) {
+				$args = '-l ';
+			} else {
+				if ($opts['o']) $args = '-o ';
+				if ($opts['f']) $args = '-j ';
+			}
+			passthru('unzip ' . $args . escapeshellarg($file), $return);
+			if ($return == 1) $return = 0; // Warning but ok
+			break;
+		case 'tar':
+			if ($opts['l']) {
+				$op = 'lvf';
+			} else {
+				if ($opts['f']) die("Don't know how to extract flattened TAR files\n");
+				$op = 'xvf';
+			} 
+			echo "Untaring $file\n";
+			passthru("tar $op " . escapeshellarg($file), $return);
+			break;
+		case 'bz2':
+		case 'tbz':
+			if ($opts['l']) {
+				$op = 'lvfj';
+			} else {
+				if ($opts['f']) die("Don't know how to extract flattened TAR files\n");
+				$op = 'xvfj';
+			}
+			echo "Unbziping $file\n";
+			passthru("tar $op " . escapeshellarg($file), $return);
+			break;
+		case 'gz':
+		case 'tgz':
+			if ($opts['l']) {
+				$op = 'lvfj';
+			} else {
+				if ($opts['f']) die("Don't know how to extract flattened TAR files\n");
+				$op = 'xvfz';
+			}
+			echo "Ungziping $file\n";
+			passthru("tar $op " . escapeshellarg($file), $return);
+			break;
+		case 'rar':
+			echo "Unraring $file\n";
+			if ($opts['l']) {
+				$op = '-l';
+			} else {
+				if ($opts['o']) $args = '-o+ ';
+				$op = ($opts['f'] ? 'e' : 'x');
+			}
+			passthru("unrar $op " . $args . escapeshellarg($file), $return);
+			break;
+		default:
+			echo "Unknown file type for '$file'\n";
+			continue;
+	}
+	if ( ($return == 0) && ($opts['d']) ) // Delete after use
+		unlink($file);
+	if ($opts['c']) chdir('..');
+}
+?>

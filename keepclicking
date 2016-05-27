@@ -1,0 +1,26 @@
+#!/bin/bash
+# Usage: keepclicking [delay]
+# Presses the left mouse button within a configurable delay
+# If delay is not specified 10 minutes is assumed
+#
+# This program requires the 'xmacro' package which can be installed using 'sudo apt-get-install xmacro'
+
+if [ "$#" -eq 0 ]; then
+	DELAY=10m
+else
+	DELAY=$1
+fi
+
+which xmacroplay >/dev/null
+if [ "$?" -ne 0 ]; then
+	echo "XMacro is not installed."
+	echo "Please run:"
+	echo "sudo apt-get install xmacro"
+	exit 1
+fi
+
+while true; do
+	echo -e 'ButtonPress 1\nDelay 1\nButtonRelease 1' | xmacroplay :0.0;
+	echo "Wait 10m..."
+	sleep "$DELAY"
+done

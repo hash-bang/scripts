@@ -1,0 +1,27 @@
+#!/bin/bash
+# Convenience function to quickly ask for a server GET query
+# Usage:
+#	get /api/nodes?foo=bar
+#	get http://localhost/api/nodes?foo=bar
+#	post /whatever 'foo=bar'
+#
+# Options:
+# Prefix to prepend to path if 'http' bit is omitted
+SERVER='http://local'
+
+# --- Code below this line ---
+
+URL="$1"
+POST="$2"
+OPTIONS=""
+
+if [[ ! "$URL" =~ "http" ]]; then
+	URL="$SERVER$URL"
+fi
+
+if [ -n "$POST" ]; then
+	OPTIONS="--post-data \"$POST\""
+fi
+
+CMD="wget -SqO- $OPTIONS \"$URL\""
+eval $CMD

@@ -1,0 +1,22 @@
+#!/bin/bash
+# Dumps a remote Mongo instance and restores it locally
+# Usage: mongo-fetch <remote-ssh-server> <remote-db> [local-db]
+
+# Exit on any errors
+set -euo pipefail
+
+RSERVER="$1"
+RDB="$2"
+LDB=${3:=$2}
+
+echo "Dumping remote database"
+ssh $RSERVER -- mongodump --db $RDB --out /tmp/mongodump
+
+echo
+echo "Fetching remote database"
+cd /tmp
+rsync --remove-sent-files -avuS $RSERVER:/tmp/mongodump .
+
+echo
+echo "Installing local database"
+mongorestore --db "$LDB" "mongodump/$RDB"

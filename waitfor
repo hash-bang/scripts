@@ -1,0 +1,11 @@
+#!/bin/bash
+# Usage: waitfor <pid,...>
+# e.g. waitfor 2312 434234 432423 && echo 'All done'
+# Stalls execution until the specified PID's quit
+
+FOUND=0
+while [ "$FOUND" -eq "0" ]; do
+	ps -p "$*" >/dev/null
+	FOUND="$?"
+	sleep 1
+done

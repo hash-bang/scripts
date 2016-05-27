@@ -1,0 +1,16 @@
+#!/bin/bash
+# Usage: kill-chrome
+# Simple script to restart chrome
+
+export DISPLAY=:0.0
+
+echo "Killing chrome..."
+killall chrome
+echo "Waiting 5 seconds..."
+sleep 5
+echo "Killing -9 chrome..."
+killall -9 chrome
+echo "Restarting chrome..."
+google-chrome-stable &
+disown
+echo "Exiting"

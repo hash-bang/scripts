@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+# Usage: dropbox-status <char_width>
+# Extract the current Dropbox status and crop the output to something sane
+
+$width = $ARGV[1] || 50;
+
+open(DB, 'dropbox status|') or die "Cannot open Dropbox process";
+my @status = <DB>;
+close $db;
+
+foreach (@status) {
+	next if /^Downloading file list/;
+	$_ = substr($line, 0, $width) if (length > $width);
+	print;
+}

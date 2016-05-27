@@ -1,0 +1,5 @@
+#!/bin/bash
+# Usage: probe <hosts...>
+# NMap scan with verbose output, runs stealth syn scan, T5 timing, OS and version detection + full port range scan.
+echo "Scanning $@..."
+sudo nmap -v -p 1-65535 -sV -O -sS -T5 "$@"

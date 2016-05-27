@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+# Usage: calc <calculation>
+# Simple command line calculator
+
+$_ = join " ", @ARGV;
+$_ = "\$result = $_; print \$result ;";
+eval;
+print "\n";

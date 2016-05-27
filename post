@@ -1,0 +1,6 @@
+#!/bin/bash
+# Wrapper script for 'get' that forwards POST requests
+# Usage: post $url $data
+# See `get` for further info
+
+get "$@"

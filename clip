@@ -1,0 +1,22 @@
+#!/bin/bash
+# Handy script to quickly manage clipboard contents
+#
+# Usage:
+#
+#	# Output all clipboard contents
+# 	clip
+#
+#	# Set the clipboard contents
+#	clip <foo.txt
+#
+#	# Set the clipboard contents via a pipe
+#	cat foo.txt | clip
+
+tty -s
+if [ "$?" == 0 ]; then
+	# Is a user - output clipboard contents
+	xsel -ob
+else
+	# Is probably a pipe - read into clipboard
+	xsel -ib </dev/stdin
+fi

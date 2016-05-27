@@ -1,0 +1,15 @@
+#!/bin/bash
+# swatch <sitecopy-profile>
+# Sitecopy-watch - Watch a sitecopy directory for changes and upload as they occur
+
+PROFILE="$1"
+DIR=`sitecopy -v "$PROFILE" | grep 'Local directory' | cut -d: -f2`
+if [[ "$?" == 0 && -n "$DIR" ]]; then
+	cd $DIR
+	echo "Triggering initial site sync"
+	sitecopy -uok $PROFILE
+	echo "Watching $PROFILE..."
+	iwatch -e 'modify' -x ./.git -X '~$' -c "sitecopy -uok $PROFILE" -r . 2>/dev/null
+else
+	echo "Unknown sitecopy profile: $PROFILE"
+fi

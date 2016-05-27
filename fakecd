@@ -1,0 +1,12 @@
+#!/bin/bash
+# Usage: fakecd <img.iso>
+#    OR: fakecd off
+# Convenience wrapper to mount an ISO9660 image to the /media/fakecd mountpoint
+
+if [ "$1" == 'off' ]; then
+	sudo umount /media/fakecd
+	sudo rmdir /media/fakecd
+else
+	sudo mkdir -p /media/fakecd >/dev/null
+	sudo mount "$1" /media/fakecd -t iso9660 -o loop=/dev/loop0
+fi

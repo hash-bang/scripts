@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ "$#" -eq 0 ]; then
+	echo "Usage: ripaud <file1> [file2...]"
+	echo "Rips the audio out of a mplayer compatible movie file and dumps an OGG file"
+	echo "Author: Matt Carter <m@ttcarter.com>"
+	exit 1
+fi
+
+for FILE in "$@"; do
+	TRUENAME=`basename "$FILE"`
+	TOFILE=${TRUENAME%.*}.ogg
+	if [ -e "$TOFILE" ]; then
+		echo "File '$TOFILE' already exists. Skipping."
+		continue
+	fi
+	echo "Encoding $FILE => $TOFILE"
+	nice mplayer "$FILE" -vc null -vo null -ao pcm:fast:waveheader:file=/tmp/ripaud.wav
+	nice oggenc -o "$TOFILE" -G "Spoken Word" -t "$TRUENAME" /tmp/ripaud.wav
+	rm /tmp/ripaud.wav 2>/dev/null
+	# ffmpeg -i "$FILE" -vn -ab 128k -acodec libvorbis "$TOFILE"
+done

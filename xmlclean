@@ -1,0 +1,11 @@
+#!/bin/bash
+# Usage: PIPE | xmlclean | PIPE
+# Formats an XML pipe from a STDIN stream
+# Author: Matt Carter <m@ttcarter.com>
+
+INFILE=`mktemp`
+OUTFILE=`mktemp`
+cat /dev/stdin >"$INFILE"
+xmllint --format "$INFILE" --output "$OUTFILE"
+cat "$OUTFILE"
+rm "$OUTFILE" "$INFILE"

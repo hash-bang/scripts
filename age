@@ -1,0 +1,4 @@
+#!/bin/bash
+# Usage: age [files...]
+# Change the creation date on all specified files to 1/1/1970
+touch -d '1/1/1970' "$@"

@@ -1,0 +1,34 @@
+#!/bin/bash
+if [ "$#" -lt 1 ]; then
+	echo "Usage: sux <user> [command]" >&2
+	echo "Executes a command as another user (carrying over XAuth info)"
+	echo "Author: Matt Carter <m@ttcarter.com>"
+	exit 2
+fi
+
+if [ "$#" -lt 2 ]; then
+	CMD=bash
+else
+	CMD=$2
+fi
+
+CLIENTUSER="$1"
+shift
+
+if [ -e "/inc/scripts/users/$CLIENTUSER/PRELOGIN" ]; then
+	. "/inc/scripts/users/$CLIENTUSER/PRELOGIN"
+fi
+
+# FD 4 becomes stdin too
+exec 4>&0
+
+xauth list "$DISPLAY" | sed -e 's/^/add /' | {
+	# FD 3 becomes xauth output
+	# FD 0 becomes stdin again
+	# FD 4 is closed
+	exec 3>&0 0>&4 4>&-
+
+	exec su - "$CLIENTUSER" -c \
+	"XAUTHORITY='/inc/X11/.gdm-$CLIENTUSER' xauth -q <&3
+	exec env DISPLAY='$DISPLAY' ICEAUTHORITY='/inc/X11/.ICEauthority-$CLIENTUSER' XAUTHORITY='/inc/X11/.gdm-$CLIENTUSER' "'"$SHELL"'" -l -c '$CMD' 3>&-"
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+# Usage: some-complex-program | 0 | xargs -0 echo
+#
+# Extremely primitive script which takes input from STDIN and changes all linefeeds to NULL
+# This is especially useful when needing to escape paths with spaces during a pipeline
+
+while (<>) {
+	s/\n/\x00/g;
+	print;
+}

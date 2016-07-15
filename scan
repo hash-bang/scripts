@@ -1,6 +1,13 @@
 #!/bin/bash
-# Usage: scan
+# Usage: scan [device]
+#
 # Simple Wifi ESSID scanner
 # This script ouputs all found ESSID's in a simple list
-DEV=wlp3s0
+
+if [ -n "$1" ]; then
+	DEV="$1"
+else
+	DEV=wlp3s0
+fi
+
 sudo iwlist "$DEV" scan 2>&1 | grep ESSID | sed -r 's/\s+ESSID:"(.*)"/\1/g' | sort

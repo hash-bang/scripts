@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run a program, monitoring its RAM and CPU consumption until it terminates
+# Usage: mon <command>
+
+/usr/bin/time -f "\n--- Resources consumed ---\nCommand:            %C\nMax CPU given:      %P\nTimes swapped:      %W\nSignals delivered:  %k\nReal time usage:    %E\nUser time usage:    %U\nSys time usage:     %S\nUnshared data:      %Dkb\nMax data size:      %Mkb\nAverage stack size: %pkb\nPage faults         %F\nFilesystem inputs:  %I\nSocket msg recv'd:  %r\nSocket msg sent:    %s\nExit status:        %x\n" -- "$@"

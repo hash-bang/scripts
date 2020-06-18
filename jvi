@@ -1,0 +1,21 @@
+#!/bin/bash
+# Open a JSON pipeline within VIM
+# Usage: jvi
+
+FILE=`mktemp --suffix .json`
+echo "Saving to '$FILE'..."
+
+echo "Formatting JSON..."
+jq . --tab < /dev/stdin >"$FILE"
+
+if [ -s "$FILE" ]; then
+	echo "Executing NVIM..."
+	nvim "+:se foldmethod=indent" "$FILE"
+
+	echo "Deleting file..."
+	rm "$FILE"
+else 
+	rm "$FILE"
+	echo "STDIN is empty"
+fi
+

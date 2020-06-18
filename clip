@@ -15,8 +15,8 @@
 tty -s
 if [ "$?" == 0 ]; then
 	# Is a user - output clipboard contents
-	xsel -ob
+	xclip -o -selection clipboard
 else
 	# Is probably a pipe - read into clipboard
-	xsel -ib </dev/stdin
+	xclip -i -selection clipboard </dev/stdin
 fi

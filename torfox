@@ -1,0 +1,14 @@
+#!/bin/bash
+# Run Firefox inside a Tor shell
+# NOTE: Firefox must be configured to use Tor's network proxy (SOCKS 127.0.0.1:9050)
+#
+# Usage: torfox [url]
+
+echo "Starting Tor..."
+sudo service tor start
+
+echo "Starting Firefox..."
+firefox
+
+echo "Stopping Tor..."
+sudo service tor stop

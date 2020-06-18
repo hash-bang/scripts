@@ -5,19 +5,33 @@
 # Features:
 #           * Case insensitive search assumed
 #           * .git, node_modules, bower_components, build automatically ignored
+#           * All RegExps are Perl standard rather
 
 EXP="$1"
 shift
 
 if [ -d "node_modules" ]; then
 	# Operating at root of Node project
-	grep "$EXP" --color=auto -ri --exclude-dir=node_modules --exclude-dir=bower_components --exclude-dir=.git --exclude-dir=build * "$@"
+	grep "$EXP" \
+		-riP \
+		--color=auto \
+		--exclude-dir=bower_components \
+		--exclude-dir=build \
+		--exclude-dir=data \
+		--exclude-dir=docs \
+		--exclude-dir=dist \
+		--exclude-dir=.git \
+		--exclude-dir=node_modules \
+		--exclude=package-lock.json \
+		. \
+		"$@"
+
 else
 	# Fallback to normal grep syntax
 	if [ -z "$@" ]; then
 		# No specific file names specified - use all
-		grep "$EXP" --color=auto -r .
+		grep "$EXP" --color=auto -P -r .
 	else
-		grep "$EXP" --color=auto -r "$@"
+		grep "$EXP" --color=auto -P -r "$@"
 	fi
 fi

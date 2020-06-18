@@ -1,5 +1,5 @@
 #!/usr/bin/php -qC
-<?
+<?php
 /**
 * TODO:
 * 	Default to '*.zip' when no arg passed

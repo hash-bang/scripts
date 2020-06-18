@@ -7,7 +7,7 @@
 #
 # Options:
 # Prefix to prepend to path if 'http' bit is omitted
-SERVER='http://local'
+SERVER='http://localhost'
 
 # --- Code below this line ---
 

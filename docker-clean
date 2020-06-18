@@ -1,0 +1,10 @@
+#!/bin/bash
+# Remove all docker containers + images
+# This will require all new containers to be rebuilt
+# Usage: docker-clean
+
+echo Deleting all containers...
+docker rm $(docker ps -a -q)
+
+echo Deleting all images...
+docker rmi $(docker images -q)

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Kill all running Docker containers
+# Usage: docker-killall
+
+docker kill `docker container list --format='{{.ID}}'`

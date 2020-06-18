@@ -1,0 +1,6 @@
+#!/bin/bash
+# Usage: cat files | tovim
+# Opens a list of files into VIM
+# Author: Matt Carter <m@ttcarter.com>
+
+cat /dev/stdin | xargs vim

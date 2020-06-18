@@ -1,0 +1,14 @@
+#!/bin/bash
+# Generate a safe password and copy it to clipboard
+# Usage: pw [--notify]
+#
+# --notify    Also send a system notfication
+
+PASS=`pwgen 32 -N1`
+echo "$PASS" | xclip -i -selection clipboard
+
+if [ "$1" == '--notify' ]; then
+	notify-send "Password copied to clipboard" -i /usr/share/icons/Humanity/status/24/keys.svg -t 3
+else
+	echo "Password: $PASS"
+fi

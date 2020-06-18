@@ -1,0 +1,10 @@
+#!/bin/bash
+# Usage: lc
+# Return a line count of all text files found in the current directory (recursive)
+
+find -type f \
+| grep -v node_modules \
+| grep -v bower_components \
+| grep 'php\|js\|css\|html' \
+| xargs cat \
+| wc -l  

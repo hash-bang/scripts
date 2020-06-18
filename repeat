@@ -1,0 +1,19 @@
+#!/bin/bash
+# Run a command a number of times until either the iterations complete or it raises an error
+# Usage: <number> <command>
+
+if [ -z "$1" ]; then
+	echo "You must specify a number of times to loop"
+	exit 1
+elif [ "$1" == 0 ]; then
+	echo "Invalid number of times specified. Must be a number greater than zero"
+	exit 1
+fi
+
+MAX="$1"
+shift
+
+for (( i=0; i < $MAX; i++ )); do
+	echo "Run $i / $MAX"
+	$@
+done

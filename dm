@@ -1,6 +1,14 @@
 #!/bin/bash
-# Usage: dm <device>
-# Mount a given device asif it were used via Gnome
-# e.g. dm sda6
+# Merge a given path (or the root) with the Doop skeleton
+# Usage: dm [path]
 
-sudo devkit-disks --mount "/dev/$1"
+if [ -z "$1" ]; then
+	echo "Merging root directories..."
+	meld . "$HOME/Papers/Projects/Doop/skeleton"
+else
+	for FILE in "$@"; do
+		RELATIVE="${FILE:-.}"
+		echo "Merging relative path '$RELATIVE'..."
+		meld "$RELATIVE" "$HOME/Papers/Projects/Doop/skeleton/$RELATIVE"
+	done
+fi

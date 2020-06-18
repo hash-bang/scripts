@@ -1,0 +1,39 @@
+#!/bin/bash
+# Grep a list of PM2 processes for a string
+# Usage: pm2-grep <match>
+
+# Default action is to print matching packages only
+OUTPUT=list
+
+# Argument processing {{{
+PARAMS=""
+while (( "$#" )); do
+	case "$1" in
+		-1)
+			OUTPUT=1
+			shift
+			;;
+		--) # end argument parsing
+			shift
+			break
+			;;
+		-*|--*=) # unsupported flags
+			echo "Error: Unsupported flag $1" >&2
+			exit 1
+			;;
+		*) # preserve positional arguments
+			PARAMS="$PARAMS $1"
+			shift
+			;;
+	esac
+done
+PARAMS=${PARAMS## } # remove leading spaces
+# }}}
+
+PROCS=`pm2 list | grep "$PARAMS" | cut -d ' ' -f 2`
+
+if [ "$OUTPUT" == "list" ]; then
+	echo "$PROCS"
+elif [ "$OUTPUT" == "1" ]; then
+	echo "$PROCS" | tr '\n' ' '
+fi

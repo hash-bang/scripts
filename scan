@@ -6,8 +6,18 @@
 
 if [ -n "$1" ]; then
 	DEV="$1"
+elif [ `hostname` == 'Dex' ]; then
+	DEV=wlp2s0
 else
 	DEV=wlp3s0
 fi
 
-sudo iwlist "$DEV" scan 2>&1 | grep ESSID | sed -r 's/\s+ESSID:"(.*)"/\1/g' | sort
+# Page the lister until we get some output
+while [ -z "$OUTPUT" ]; do
+	OUTPUT=`sudo iwlist "$DEV" scan 2>&1 | grep ESSID | sed -r 's/\s+ESSID:"(.*)"/\1/g' | sort`
+	echo -n "."
+	sleep 0.25
+done
+
+echo
+echo "$OUTPUT"

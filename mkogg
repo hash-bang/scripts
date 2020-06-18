@@ -1,9 +1,0 @@
-#!/bin/bash
-# Usage: mkogg
-# Converts all .mp3 files in the current folder to .ogg
-# By default the original .mp3 file is NOT deleted
-for FILE in *.mp3; do
-	FILE=${FILE%.*}
-	echo "Processing $FILE..."
-	avconv -i "$FILE.mp3" "$FILE.ogg"
-done

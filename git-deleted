@@ -1,4 +1,0 @@
-#!/bin/bash
-# List all deleted files in a Git repo
-# Usage: git deleted
-git log --diff-filter=D --summary | grep delete | cut -d ' ' -f 5 | sort

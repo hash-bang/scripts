@@ -1,4 +1,0 @@
-#!/bin/bash
-# Usage: test-download
-# Download a test file from Internode to test bandwidth speed
-wget 'http://mirror.internode.on.net/pub/test/1000meg.test' --no-cache -O /dev/null

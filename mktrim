@@ -1,4 +1,0 @@
-#!/bin/bash
-# Usage: mktrim
-# Remove all whitespace from all .png files recursively
-find -name '*.png' -print0 | xargs -0 mogrify -verbose -trim

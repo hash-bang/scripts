@@ -1,0 +1,11 @@
+#!/bin/bash
+# Print the current external IP address
+# Usage: extip [-t]
+#
+# -t Print the TOR IP address
+
+if [ "$1" == "-t" ]; then
+	curl -s --socks5 127.0.0.1:9050 http://checkip.amazonaws.com
+else
+	curl -s http://checkip.amazonaws.com
+fi

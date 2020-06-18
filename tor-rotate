@@ -1,0 +1,11 @@
+#!/bin/bash
+# Rotate the Tor identity
+# Usage: tor-rotate-ip
+
+CURIP=`extip -t`
+echo "Current Tor IP Address: $CURIP"
+
+sudo killall -HUP tor
+
+CURIP=`extip -t`
+echo "New Tor IP Address: $CURIP"

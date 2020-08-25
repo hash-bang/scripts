@@ -1,0 +1,15 @@
+#!/bin/bash
+# Kill whatever process is listening on port 80
+# Usage: kill-80 [port]
+#
+# [port]    Port to kill, defaults to 80
+
+PORT=${1:-80}
+PID=`sudo netstat -nlp | grep ':::80 ' | perl -pe 's/^.*LISTEN\s+([0-9]+)\/.*$/$1/g'`
+
+if [ -z "$PID" ]; then
+	echo "No process found listening on port $PORT"
+else
+	echo "Killing process $PID (was listening on port $PORT)..."
+	kill "$PID"
+fi

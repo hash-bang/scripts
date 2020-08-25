@@ -1,0 +1,5 @@
+#!/bin/bash
+# Scan a series of addresses using a deep Nmap scan
+# Usage: nmap-scan <server...>
+
+nmap -A -T4 "$@"

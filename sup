@@ -7,7 +7,15 @@ CMD1=$1
 CMD2=$2
 
 if [ -z "$CMD1" ]; then
-	CMD1="glances"
+	if [ `which ytop >/dev/null; echo "$?"` == 0 ]; then
+		CMD1=ytop
+	elif [ `which glances >/dev/null; echo "$?"` == 0 ]; then
+		CMD1=glances
+	elif [ `which htop >/dev/null; echo "$?"` == 0 ]; then
+		CMD1=htop
+	else
+		CMD1=top
+	fi
 fi
 
 if [ -z "$CMD2" ]; then

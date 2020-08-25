@@ -14,7 +14,7 @@ fi
 
 # Page the lister until we get some output
 while [ -z "$OUTPUT" ]; do
-	OUTPUT=`sudo iwlist "$DEV" scan 2>&1 | grep ESSID | sed -r 's/\s+ESSID:"(.*)"/\1/g' | sort`
+	OUTPUT=`sudo iwlist "$DEV" scan 2>&1 | grep ESSID | sed -r 's/\s+ESSID:"(.*)"/\1/g' | sort | uniq`
 	echo -n "."
 	sleep 0.25
 done

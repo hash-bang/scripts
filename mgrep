@@ -2,6 +2,7 @@
 # Greps for modules in a projects package.json file
 # Usage: mgrep [-i|-r] <expression>
 #
+# -a  Auto mode, like '-i' this installs all greppable packages but also removes all prefixes with '-'
 # -l  Grep in one line (useful when using as a sub-shell query)
 # -D  Use devDependencies instead of regular dependencies
 # -i  Bump the matching packages to latest (using `npm i PKG@latest`)
@@ -20,6 +21,10 @@ ACTION="print"
 PARAMS=""
 while (( "$#" )); do
 	case "$1" in
+		-a)
+			ACTION="auto"
+			shift
+			;;
 		-l)
 			ACTION="linegrep"
 			shift
@@ -49,8 +54,13 @@ while (( "$#" )); do
 			break
 			;;
 		-*|--*=) # unsupported flags
-			echo "Error: Unsupported flag $1" >&2
-			exit 1
+			if [ "$ACTION" == "auto" ]; then
+				PARAMS="$PARAMS $1"
+				shift
+			else
+				echo "Error: Unsupported flag $1" >&2
+				exit 1
+			fi
 			;;
 		*) # preserve positional arguments
 			PARAMS="$PARAMS $1"
@@ -58,7 +68,7 @@ while (( "$#" )); do
 			;;
 	esac
 done
-# PARAMS=${PARAMS## } # remove leading spaces
+PARAMS=${PARAMS## } # remove leading spaces
 # }}}
 
 while [ ! -e "package.json" ]; do
@@ -69,20 +79,30 @@ while [ ! -e "package.json" ]; do
 	cd ..
 done
 
-BLUE='\033[0;34m'
-RESET='\033[0m'
+source colors
+COLOR_ACTION="${COLOR_BLACK}${COLOR_ON_WHITE}"
+COLOR_PKG="${COLOR_BLUE}"
+BULLET="${COLOR_BBLUE}➤ ${COLOR_RESET}"
 PACKAGES=`cat package.json | o pluck $BRANCH | o map _.toPairs | o columns id version | o select id | o to --csv | tail -n +2 | sort`
 
 IFS=' ' read -a SEARCHPARAMS <<< "${PARAMS}"
 for SEARCH in ${SEARCHPARAMS[@]}; do
-	for PKG in `echo "$PACKAGES" | grep -i "$SEARCH"`; do
+	for PKG in `echo "$PACKAGES" | grep -i "${SEARCH/[+-]}"`; do
 		case "$ACTION" in
 			"linegrep")
 				echo -n "${PKG} "
 				;;
+			"auto")
+				if [ "${SEARCH:0:1}" == '-' ]; then
+					echo -e "${BULLET}${COLOR_ACTION}Remove${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+					npm remove "$PKG"
+				else
+					echo -e "${BULLET}${COLOR_ACTION}Install latest${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+					npm install --prefer-online --audit=false "$PKG@latest"
+				fi
+				;;
 			"install")
-				echo -e "* Install latest ${BLUE}${PKG}${RESET}"
-				npm install --prefer-online --audit=false "$PKG@latest"
+				echo -e "${BULLET}${COLOR_ACTION}Install latest${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
 				echo
 				if [ "$?" != 0 ]; then
 					echo "Aborted install due to NPM returning a non-zero exit code"
@@ -90,7 +110,7 @@ for SEARCH in ${SEARCHPARAMS[@]}; do
 				fi
 				;;
 			"update")
-				echo -e "* Update ${BLUE}${PKG}${RESET}"
+				echo -e "${BULLET}${COLOR_ACTION}Update${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
 				npm update --prefer-online --audit=false "$PKG"
 				echo
 				if [ "$?" != 0 ]; then
@@ -99,7 +119,7 @@ for SEARCH in ${SEARCHPARAMS[@]}; do
 				fi
 				;;
 			"remove")
-				echo -e "* Remove ${BLUE}${PKG}${RESET}"
+				echo -e "${BULLET}${COLOR_ACTION}Remove${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
 				npm remove --audit=false "$PKG"
 				echo
 				if [ "$?" != 0 ]; then
@@ -108,7 +128,7 @@ for SEARCH in ${SEARCHPARAMS[@]}; do
 				fi
 				;;
 			"version")
-				echo "* $PKG"
+				echo -e "${BULLET}${COLOR_ACTION}Query${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
 				echo "Installed spec:" `grep "$PKG" package.json | cut -d '"' -f4`
 				echo "NPM version   :" `npm -q show "$PKG" version`
 				echo

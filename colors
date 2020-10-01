@@ -8,7 +8,7 @@
 #
 # @example Output Hello World
 # source colors
-# echo "${COLOR_BLUE}${COLOR_ON_WHITE}Hello${COLOR_RESET}"
+# echo -e "${COLOR_BLUE}${COLOR_ON_WHITE}Hello${COLOR_RESET}"
 
 
 # Reset

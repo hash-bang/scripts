@@ -1,0 +1,33 @@
+#!/bin/bash
+# Switch to a specific or relative workspace
+# Usage: xfce4-desktop-switch <number|next|prev>
+
+CURRENT=`wmctrl -d | /bin/grep "\*" | cut -f 1 -d ' '`
+MAX=`wmctrl -d | tail -n1 | cut -f 1 -d ' '`
+
+echo "Current: $CURRENT / $MAX"
+
+if [ "$1" == "alt-0-2" ]; then
+	if [ "$CURRENT" == '0' ]; then
+		wmctrl -s 2
+	else
+		wmctrl -s 0
+	fi
+elif [ "$1" == "next" ]; then
+	NEW=$(($CURRENT + 1))
+	if [ "$NEW" -gt "$MAX" ]; then
+		NEW=0
+	fi
+	echo "Switching to next ($NEW)..."
+	wmctrl -s "$NEW"
+elif [ "$1" == "prev" ]; then
+	NEW=$(($CURRENT - 1))
+	if [ "$NEW" -lt 0 ]; then
+		NEW="$MAX"
+	fi
+	echo "Switching to previous ($NEW)..."
+	wmctrl -s "$NEW"
+else
+	echo "Switching to $1..."
+	wmctrl -s "$1"
+fi

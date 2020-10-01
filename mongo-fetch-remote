@@ -1,0 +1,114 @@
+#!/bin/bash
+# Pull a remote MongoDB into a local copy
+# Usage: mongo-fetch-remote [-l localDBName] host remoteDbName
+
+HELP="
+mongo-fetch-remote [-l localDBName] host remoteDbName
+
+-l [localDBName]    Override the localDB name, uses remoteDBName by default
+
+-n, --dry-run       Don't actually do anything, just show what would be done
+
+-h, --help          Show command line help
+
+
+EXAMPLE:
+# Fetch the remoteDB from host 'acme.com' into localDB
+> mongo-fetch-remote -l localDB acme.com remoteDB
+"
+
+PREFIX=""
+DRYRUN=0
+HOST=""
+LOCALDBNAME=""
+REMOTEDBNAME=""
+TMPDIR="/tmp/mongo-fetch-remote"
+
+# Stop on all errors
+set -euo pipefail
+
+# Argument processing {{{
+PARAMS=()
+while (( "$#" )); do
+	case "$1" in
+		-l)
+			LOCALDBNAME="$2"
+			shift
+			shift
+			;;
+		-n|--dry-run)
+			DRYRUN=1
+			PREFIX="echo RUN:"
+			shift
+			;;
+		-h|--help)
+			echo "$HELP"
+			exit 0
+			;;
+		--) # end argument parsing
+			shift
+			break
+			;;
+		-*|--*=) # unsupported flags
+			if [ "$ACTION" == "auto" ]; then
+				PARAMS+=("$1")
+				shift
+			else
+				echo "Error: Unsupported flag $1" >&2
+				exit 1
+			fi
+			;;
+		*) # preserve positional arguments
+			PARAMS+=("$1")
+			shift
+			;;
+	esac
+done
+HOST="${PARAMS[0]}"
+REMOTEDBNAME="${PARAMS[1]}"
+
+
+# Set local to default if not already set
+if [ -z "$LOCALDBNAME" ]; then
+	LOCALDBNAME="$REMOTEDBNAME"
+fi
+# }}}
+
+
+# Sanity checks {{{
+if [ -z "$HOST" ]; then
+	echo "No remote database name given"
+	exit 1
+fi
+
+if [ -z "$REMOTEDBNAME" ]; then
+	echo "No remote database name given"
+	exit 1
+fi
+# }}}
+
+
+source colors
+
+echo -e "${COLOR_BWHITE}Going to copy ${COLOR_RESET}${COLOR_BLUE}${HOST}/${REMOTEDBNAME} ${COLOR_RESET}-> ${COLOR_BLUE}localhost/${LOCALDBNAME}${COLOR_RESET}"
+echo "Press enter to confirm, Ctrl+C to cancel"
+read
+
+echo -e "${COLOR_BLACK}${COLOR_ON_WHITE}Dumping remote database \"${REMOTEDBNAME}\"${COLOR_RESET}"
+${PREFIX} ssh "${HOST}" "mongodump --db '${REMOTEDBNAME}' --out ${TMPDIR}"
+echo
+
+echo -e "${COLOR_BLACK}${COLOR_ON_WHITE}Fetch database dump\"${REMOTEDBNAME}\"${COLOR_RESET}"
+${PREFIX} rsync --remove-sent-files -avuS "${HOST}:${TMPDIR}/" "${TMPDIR}"
+echo
+
+echo -e "${COLOR_BLACK}${COLOR_ON_WHITE}Load database into local \"${LOCALDBNAME}\"${COLOR_RESET}"
+${PREFIX} mongorestore --drop --noIndexRestore --numParallelCollections=8 --db "${LOCALDBNAME}" "${TMPDIR}/${REMOTEDBNAME}"
+echo
+
+echo -e "${COLOR_BLACK}${COLOR_ON_WHITE}Clean up${COLOR_RESET}"
+${PREFIX} ssh "${HOST}" "rm -r \"${TMPDIR}\""
+${PREFIX} rm -r "${TMPDIR}"
+echo
+
+echo -e "${COLOR_GREEN}Database fetch completed successfully: ${HOST}/${REMOTEDBNAME} -> localhost/${LOCALDBNAME}${COLOR_RESET}"

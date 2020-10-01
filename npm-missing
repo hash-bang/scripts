@@ -1,0 +1,5 @@
+#!/bin/bash
+# Simple script to find missing NPM's using RipGrep
+# This script simply outputs all missing NPM's to STDOUT and requires manual oversight to correct missing packages
+# Usage: npm-missing
+rg 'require\(' | perl -pe 's/.*require\(.(.+?).\).*/\1/mg' | sort | uniq | grep -v '^\.' | grep -v '^\$'

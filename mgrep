@@ -103,6 +103,7 @@ for SEARCH in ${SEARCHPARAMS[@]}; do
 				;;
 			"install")
 				echo -e "${BULLET}${COLOR_ACTION}Install latest${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+				npm install --prefer-online --audit=false "$PKG@latest"
 				echo
 				if [ "$?" != 0 ]; then
 					echo "Aborted install due to NPM returning a non-zero exit code"

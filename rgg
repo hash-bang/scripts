@@ -1,0 +1,21 @@
+#!/bin/bash
+# Search using RipGrep and immediately open all matches in VI, seeking to the line
+
+MATCHES=`rg --no-heading --line-number "$@"`
+
+# Convert into an array
+readarray -t MATCHES <<<"$MATCHES"
+
+if [ "${#MATCHES[@]}" -gt 1 ]; then
+	echo "${#MATCHES[@]} matches detected"
+	echo $MATCHES
+	exit 1
+else
+	MATCH="${MATCHES[0]}"
+fi
+echo "RAW [[[$MATCH]]]"
+
+# Split FILE:LINE:MATCH into an array
+IFS=: read -ra BITS <<<"$MATCH"
+
+vi "${BITS[0]}" "+${BITS[1]}"

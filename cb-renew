@@ -5,26 +5,21 @@
 HELP="
 cb-renew [-m method]
 
-Perform a "sane" certbot renewal process.
+Perform a \"sane\" certbot renewal process.
 
-Unlike the regular `certbot renew` process this script has the following behaviours:
+Unlike the regular \"certbot renew\" process this script has the following behaviours:
 
-1. Detect the correct version of Certbot to use (for older systems needing `certbot-auto`)
+1. Detect the correct version of Certbot to use (for older systems needing \"certbot-auto\")
 2. Detect the correct method to use when renewing (e.g. restart / reload Nginx automatically)
 3. Sanity checks before main process avoiding downtime
 
 
 -m [method]         Specify the Certbot setup mode
-			"auto"  - Try to detect the the method automatically (default)
-                        "dme"   - DNS-Made-Easy DNS auth
-			"nginx" - Full server renew via Nginx service start / setop
+			\"auto\"  - Try to detect the the method automatically (default)
+                        \"dme\"   - DNS-Made-Easy DNS auth
+			\"nginx\" - Full server renew via Nginx service start / setop
 
 -h, --help          Show command line help
-
-
-EXAMPLE:
-# Renew a certbot certificate auto-detecing the method to use
-> cb renew
 "
 
 METHOD="auto"
@@ -60,7 +55,7 @@ done
 # }}}
 
 # Certbot binary detection {{{
-if [ -e "$HOME/certbot-auto" ]; then
+if [ -x "$HOME/certbot-auto" ]; then
 	CERTBOT="$HOME/certbot-auto"
 elif [ `which certbot >/dev/null; echo "$?"` == 0 ]; then
 	CERTBOT="certbot"
@@ -75,7 +70,7 @@ if [ "$METHOD" == "auto" ]; then
 	if [ -e "$HOME/.dnsmadeeasy" ]; then
 		echo "Found DME config file - assuming 'DNS Made Easy' method"
 		METHOD="dme"
-	elif [ `ps ax | grep -q nginx` ]; then
+	elif [ `ps ax | grep -q nginx; echo "$?"` == 0 ]; then
 		echo "Found Nginx process - assuming 'Nginx' method"
 		METHOD='nginx'
 	else
@@ -86,14 +81,14 @@ fi
 # }}}
 
 # 0. Sanity check - check we have at least one cert to renew and that certbot works {{{
-$CERTBOT certificates >/dev/null
+sudo $CERTBOT certificates >/dev/null
 if [ "$?" != 0 ]; then
 	echo "Something went wrong running `$CERTBOT certificates` - aborting"
 	exit 1
 fi
 
-$CERTBOT certificates | grep -q "Found the following"
-if [ "$?" != 0]; then
+sudo $CERTBOT certificates | grep -q "Found the following"
+if [ "$?" != 0 ]; then
 	echo "No certificates found to renew - aborting"
 	exit 1
 fi

@@ -57,7 +57,7 @@ done
 # Certbot binary detection {{{
 if [ -x "$HOME/certbot-auto" ]; then
 	CERTBOT="$HOME/certbot-auto"
-elif [ `which certbot >/dev/null; echo "$?"` == 0 ]; then
+elif [ `sudo which certbot >/dev/null; echo "$?"` == 0 ]; then
 	CERTBOT="certbot"
 else
 	echo "Cannot determine Certbot binary to use - aborting"

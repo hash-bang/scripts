@@ -2,4 +2,4 @@
 # Runs the NodeJS `n` NPM as sudo
 # This script also maintains Node port 80 access even though the binary may change
 sudo /home/mc/.npm-global/bin/n "$@"
-sudo setcap cap_net_bind_service=+ep /usr/bin/node
+sudo setcap cap_net_bind_service=+ep /usr/local/bin/node

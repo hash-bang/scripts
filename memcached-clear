@@ -1,0 +1,5 @@
+#!/bin/bash
+# Flush the entire memcached memory contents
+# Usage: memcached-clear
+
+echo 'flush_all' | nc localhost 11211

@@ -1,0 +1,12 @@
+#!/bin/bash
+# Lock the screen, restarting the xscreensaver daemon if its not already present
+# Usage: lock-screen
+
+pgrep xscreensaver >/dev/null
+if [ "$?" != 0 ]; then
+	echo "X-Screensaver not running, starting now..."
+	xscreensaver -nosplash &
+	sleep 1
+fi
+
+xscreensaver-command -lock

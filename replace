@@ -1,0 +1,83 @@
+#!/bin/bash
+HELP="
+replace [-g glob] <from> <to>
+
+Run a Perl substitution RegExp in all files matching the FROM component via RipGrep.
+
+-i, --insensitive       Set flags to 'gi' for global, insensitive matching
+-f, --flags [flags]     Override default RegExp flag 'g' to another value
+-g, --glob [glob]       Only operate on specific files matching a RipGrep glob expression
+
+-h, --help              Show command line help
+
+
+EXAMPLES
+
+# Replace all occurances of 'foo' with 'bar' in all matching files
+reppm2 start --name 'devaos-d' --time server/index.js -- -e devaos -o port=10004 -o papertrail.program=devaos-dlace foo bar
+
+# Poor-mans HTML inner tag replacement on all .html files, using case insensitive matching
+replace -i -g *.html '<foo>.*</foo>' '<bar>$1</bar>'
+"
+
+
+# Stop on errors {{{
+set -euo pipefail
+# }}}
+
+# Defaults {{{
+RIPGREP="rg --pcre2 --files-with-matches"
+FLAGS="g"
+PARAMS=()
+# }}}
+
+# Argument processing {{{
+while (( "$#" )); do
+	case "$1" in
+		-i|--insensitive)
+			FLAGS="gi"
+			shift
+			;;
+		-f|--flags)
+			FLAGS="${2}"
+			shift
+			shift
+			;;
+		-g|--glob)
+			RIPGREP="$RIPGREP --glob '${$2}'"
+			shift
+			shift
+			;;
+		-h|--help)
+			echo "$HELP"
+			exit 0
+			;;
+		--) # end argument parsing
+			shift
+			break
+			;;
+		-*|--*=) # unsupported flags
+			echo "Error: Unsupported flag $1" >&2
+			exit 1
+			;;
+		*) # preserve positional arguments
+			PARAMS+=("$1")
+			shift
+			;;
+	esac
+done
+# }}}
+
+# Sanity checks {{{
+if [[ "${#PARAMS[@]}" < 2 ]]; then
+	echo "$HELP"
+	echo
+	echo "FROM / TO must be specified"
+	exit 1
+fi
+
+FROM="${PARAMS[0]}"
+TO="${PARAMS[1]}"
+# }}}
+
+exec $RIPGREP "$FROM" | xargs --no-run-if-empty perl -pi -e "s!${FROM}!${TO}!${FLAGS}"

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Compress one or more files into a tarball using pbzip2 for maximum speed
+# This script exists purely so I don't have to remember tar command syntax each bloody time
+#
+# Usage: compress [file_to_create.tar.bz2] [files...]
+
+TARFILE="$1"
+shift
+
+echo "Compressing into '$TARFILE'..."
+tar -c "$@" | pbzip2 -c | pv --bytes --average-rate >"$TARFILE"

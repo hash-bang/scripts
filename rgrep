@@ -1,0 +1,12 @@
+#!/bin/bash
+# NodeJS Require scan grep utility
+# This script simply outputs all require('*') packages within a path using RipGrep
+# NOTE: This grep ignores all '$' expressions assuming they are ES6 template expressions
+#       It also omits all standard node modules
+# Usage: rgrep [glob]
+
+rg 'require(.+)' "$@" \
+	| perl -pe 's/^.+require\(.(.+?).\).*$/\1/mg' \
+	| grep -vP '^(assert|buffer|child_process|cluster|crypto|dgram|dns|domain|events|fs|http|https|net|os|path|punycode|querystring|readline|stream|string_decoder|timers|tls|tty|url|util|v8|vm|zlib)$' \
+	| grep -v '\$' \
+	| sort

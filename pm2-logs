@@ -1,0 +1,16 @@
+#!/bin/bash
+# Output PM2 logs with an optional RipGrep expression
+# This function splices together dates and merges STDOUT / STDERR log files
+# By default this script only examines the last 1k lines of each log file, to increase set the "LINES=<number>" environment variable
+# Usage: pm2-logs <match>
+
+LOGPATH="$HOME/.pm2/logs"
+TAIL=${LINES:-1000}
+
+# Shift first param as grep expression, fixing it to a 'match all' if none
+GREPEXP="${1:-.}"
+shift
+
+tail --lines=$TAIL $LOGPATH/*.log \
+	| sort --key=1 --field-separator=: \
+	| rg "$GREPEXP" "$@"

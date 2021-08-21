@@ -2,4 +2,4 @@
 # Scan a series of addresses using a deep Nmap scan
 # Usage: nmap-scan <server...>
 
-nmap -A -T4 "$@"
+nmap -A -T4 --top-ports=4000 "$@"

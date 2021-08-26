@@ -1,0 +1,12 @@
+#!/bin/bash
+# Watch a process by alias and show file handles
+# Usage: pwatch <process-search-string>
+
+PWPID=`pgrep "$@" | head -n1`
+if [[ "$?" != 0 || -z "$PWPID" ]]; then
+	echo "No matching process found"
+	exit 1
+fi
+
+echo "Watching process #${PWPID}"
+sudo strace -p "$PWPID" -f -e lstat,open,stat 2>&1 | cut -d'"' -f 2 | uniq

@@ -57,9 +57,14 @@ done
 
 # Certbot binary detection {{{
 if [ -x "$HOME/certbot-auto" ]; then
+	echo "Using ~/certbot-auto"
 	CERTBOT="$HOME/certbot-auto"
+elif [ -e '/var/snap/certbot' ]; then
+	CERTBOT="snap run certbot"
+	echo "Using Certbot Snap"
 elif [ `sudo which certbot >/dev/null; echo "$?"` == 0 ]; then
 	CERTBOT="certbot"
+	echo "Using Certbot binary"
 else
 	echo "Cannot determine Certbot binary to use - aborting"
 	exit 0

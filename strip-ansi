@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+# Strip Non-printing ANSI escape codes within a pipeline
+#
+# Usage: strip-ansi <file...>
+#        pipeline | strip-ansi
+#
+# Example: printf "%s\033[1;33;41m%s\033[0m%s\n" "Prefix " "YELLOW on RED" " Suffix" | strip-ansi
+
+while (<>) {
+	s/ \e[ #%()*+\-.\/].           |
+		\e\[ [ -?]* [@-~]          | # CSI ... Cmd
+		\e\] .*? (?:\e\\|[\a\x9c]) | # OSC ... (ST|BEL)
+		\e[P^_] .*? (?:\e\\|\x9c)  | # (DCS|PM|APC) ... ST
+		\e. //xg;
+
+	print;
+}

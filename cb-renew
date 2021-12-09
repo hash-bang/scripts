@@ -15,10 +15,11 @@ Unlike the regular \"certbot renew\" process this script has the following behav
 
 
 -m [method]         Specify the Certbot setup mode
-			\"auto\"     - Try to detect the the method automatically (default)
-			\"dme\"      - DNS-Made-Easy DNS auth (uses LE: DME method)
-			\"nginx\"    - Full server renew via Nginx service start / stop (uses LE: standalone method)
-			\"nginx-wr\" - Use Nginx + Webroot (via /var/www) (uses LE: webroot method)
+			\"auto\"       - Try to detect the the method automatically (default)
+			\"apache\"     - Full server renew via Apache
+			\"nginx\"      - Full server renew via Nginx service start / stop (uses LE: standalone method)
+			\"nginx-dme\"  - DNS-Made-Easy DNS auth (uses LE: DME method)
+			\"nginx-wr\"   - Use Nginx + Webroot (via /var/www) (uses LE: webroot method)
 
 -h, --help          Show command line help
 "
@@ -76,6 +77,9 @@ if [ "$METHOD" == "auto" ]; then
 	if [ -e "$HOME/.dnsmadeeasy" ]; then
 		echo "Found DME config file - assuming 'DNS Made Easy' method"
 		METHOD="dme"
+	elif [ `ps ax | grep -q apache2; echo "$?"` == 0 ]; then
+		echo "Found Apache process - assuming 'Apache' method"
+		METHOD='apache'
 	elif [ `ps ax | grep -q nginx; echo "$?"` == 0 ]; then
 		if [ `grep -q .well-known /etc/nginx/nginx.conf; echo "$?"` == 0 ]; then
 			echo "Found Nginx process + .well-known in nginx.conf file - assuming 'Nginx-WR' method"
@@ -106,9 +110,12 @@ fi
 # }}}
 
 # 1. Pre-procesing steps {{{
-if [ "$METHOD" == 'nginx' ]; then
+if [ "$METHOD" == 'apache' ]; then
+	echo "Stopping Apache process..."
+	sudo systemctl stop apache2
+elif [ "$METHOD" == 'nginx' ]; then
 	echo "Stopping Nginx process..."
-	sudo service nginx stop
+	sudo systemctl stop nginx
 elif [ "$METHOD" == 'nginx-wr' ]; then
 	echo "Creating /var/www/.well-known..."
 	if [ -e "/var/www/.well-known" ]; then
@@ -120,31 +127,34 @@ fi
 # }}}
 
 # 2. Renewal {{{
-if [ "$METHOD" == 'nginx' ]; then
+if [[ "$METHOD" == 'apache' ||  "$METHOD" == 'nginx' ]]; then
 	echo "Renewing via standalone..."
 	sudo $CERTBOT renew --standalone
 elif [ "$METHOD" == 'nginx-wr' ]; then
 	echo "Renewing via webroot..."
 	sudo $CERTBOT renew --webroot
-elif [ "$METHOD" == 'dme' ]; then
+elif [ "$METHOD" == 'nginx-dme' ]; then
 	echo "Renewing via DME..."
 	sudo $CERTBOT renew
 fi
 # }}}
 
 # 3. Post-processing steps {{{
-if [ "$METHOD" == 'nginx' ]; then
+if [ "$METHOD" == 'apache' ]; then
+	echo "Starting Apache process..."
+	sudo systemctl start apache2
+elif [ "$METHOD" == 'nginx' ]; then
 	echo "Starting Nginx process..."
-	sudo service nginx start
+	sudo systemctl start nginx
 elif [ "$METHOD" == 'nginx-wr' ]; then
 	echo "Cleaning up /var/www/.well-known..."
 	sudo rm -r /var/www/.well-known
 
 	echo "Reloading Nginx process..."
-	sudo service nginx reload
+	sudo systemctl reload nginx
 elif [ "$METHOD" == "dme" ]; then
 	echo "Reloading Nginx certificate data..."
-	sudo service nginx reload
+	sudo systemctl reload nginx
 fi
 # }}}
 

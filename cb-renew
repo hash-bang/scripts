@@ -77,10 +77,10 @@ if [ "$METHOD" == "auto" ]; then
 	if [ -e "$HOME/.dnsmadeeasy" ]; then
 		echo "Found DME config file - assuming 'DNS Made Easy' method"
 		METHOD="dme"
-	elif [ `ps ax | grep -q apache2; echo "$?"` == 0 ]; then
+	elif [ `pgrep apache2 >/dev/null; echo "$?"` == 0 ]; then
 		echo "Found Apache process - assuming 'Apache' method"
 		METHOD='apache'
-	elif [ `ps ax | grep -q nginx; echo "$?"` == 0 ]; then
+	elif [ `pgrep nginx >/dev/null; echo "$?"` == 0 ]; then
 		if [ `grep -q .well-known /etc/nginx/nginx.conf; echo "$?"` == 0 ]; then
 			echo "Found Nginx process + .well-known in nginx.conf file - assuming 'Nginx-WR' method"
 			METHOD='nginx'

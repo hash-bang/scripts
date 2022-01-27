@@ -132,7 +132,7 @@ if [[ "$METHOD" == 'apache' ||  "$METHOD" == 'nginx' ]]; then
 	sudo $CERTBOT renew --standalone
 elif [ "$METHOD" == 'nginx-wr' ]; then
 	echo "Renewing via webroot..."
-	sudo $CERTBOT renew --webroot
+	sudo $CERTBOT renew --webroot --webroot-path /var/www
 elif [ "$METHOD" == 'nginx-dme' ]; then
 	echo "Renewing via DME..."
 	sudo $CERTBOT renew

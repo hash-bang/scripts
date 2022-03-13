@@ -13,4 +13,4 @@ cd "$LOGPATH"
 
 rg "$GREPEXP" "$@" *.log \
 	| perl -pe 's/-(err|out)\.log:/:/g' \
-	| sort --key=1 --field-separator=:
+	| sort --field-separator=: --key=2

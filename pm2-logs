@@ -12,5 +12,5 @@ shift
 cd "$LOGPATH"
 
 rg "$GREPEXP" "$@" *.log \
-	| perl -pe 's/-(err|out)\.log:/:/g' \
+	| perl -p -e 's/-(err|out)\.log[:-]/:/g; s/--\n//gs' \
 	| sort --field-separator=: --key=2

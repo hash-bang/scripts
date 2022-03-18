@@ -9,4 +9,4 @@ if [ "$?" != 0 ]; then
 	sleep 1
 fi
 
-xscreensaver-command -lock
+xscreensaver-command -lock &

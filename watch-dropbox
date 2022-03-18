@@ -5,7 +5,7 @@
 #
 
 # Prefix of DB filesystem
-PREFIX="/home/mc/Dropbox"
+PREFIX="/home/mc/Papers"
 
 DBPID=`ps -C 'dropbox' -o '%p' | tr -d ' \nPID'` 
 if [ -z "$DBPID" ]; then

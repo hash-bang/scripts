@@ -87,7 +87,7 @@ PACKAGES=`cat package.json | o pluck $BRANCH | o map _.toPairs | o columns id ve
 
 IFS=' ' read -a SEARCHPARAMS <<< "${PARAMS}"
 for SEARCH in ${SEARCHPARAMS[@]}; do
-	for PKG in `echo "$PACKAGES" | grep -i "${SEARCH/[+-]}"`; do
+	for PKG in `echo "$PACKAGES" | grep -Fi "$SEARCH"`; do
 		case "$ACTION" in
 			"linegrep")
 				echo -n "${PKG} "

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Wrapper around Certbot for a sane config
+# Wrapper around `certbot renew` with sane config
 # Usage: cb-renew [-m method]
 
 HELP="
@@ -14,14 +14,14 @@ Unlike the regular \"certbot renew\" process this script has the following behav
 3. Sanity checks before main process avoiding downtime
 
 
--m [method]         Specify the Certbot setup mode
+-m, --method [method]      Specify the Certbot setup mode
 			\"auto\"       - Try to detect the the method automatically (default)
 			\"apache\"     - Full server renew via Apache
 			\"nginx\"      - Full server renew via Nginx service start / stop (uses LE: standalone method)
 			\"nginx-dme\"  - DNS-Made-Easy DNS auth (uses LE: DME method)
 			\"nginx-wr\"   - Use Nginx + Webroot (via /var/www) (uses LE: webroot method)
 
--h, --help          Show command line help
+-h, --help                 Show command line help
 "
 
 METHOD="auto"
@@ -31,7 +31,7 @@ CERTBOT="certbot"
 PARAMS=()
 while (( "$#" )); do
 	case "$1" in
-		-m)
+		-m|--method)
 			METHOD="$2"
 			shift
 			shift
@@ -76,7 +76,7 @@ fi
 if [ "$METHOD" == "auto" ]; then
 	if [ -e "$HOME/.dnsmadeeasy" ]; then
 		echo "Found DME config file - assuming 'DNS Made Easy' method"
-		METHOD="dme"
+		METHOD="nginx-dme"
 	elif [ `pgrep apache2 >/dev/null; echo "$?"` == 0 ]; then
 		echo "Found Apache process - assuming 'Apache' method"
 		METHOD='apache'
@@ -152,7 +152,7 @@ elif [ "$METHOD" == 'nginx-wr' ]; then
 
 	echo "Reloading Nginx process..."
 	sudo systemctl reload nginx
-elif [ "$METHOD" == "dme" ]; then
+elif [ "$METHOD" == "nginx-dme" ]; then
 	echo "Reloading Nginx certificate data..."
 	sudo systemctl reload nginx
 fi

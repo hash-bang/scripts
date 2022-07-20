@@ -1,0 +1,148 @@
+#!/bin/bash
+# Wrapper around Certbot setup
+#
+# Usage: cb-setup <domain> [domain...]
+
+HELP="
+cb-setup <domain> [domain...]
+
+-e, --email [email]          Contact email to use (defaults to daemons@mfdc.biz)
+-m, --method [method]        Specify the Certbot setup mode
+			\"auto\"       - Try to detect the the method automatically (default)
+			\"manual\"     - Dont do anything, just output the command to run
+			\"nginx\"      - Full server renew via Nginx service start / stop (uses LE: standalone method)
+			\"nginx-dme\"  - DNS-Made-Easy DNS auth (uses LE: DME method)
+
+-h, --help                   Show command line help
+
+* Automatically prefixes all given domains with 'www.'
+* Will use DNSMadeEasy application method if ~/.dnsmadeeasy exists or Nginx method if Nginx service is found
+"
+
+METHOD="auto"
+CERTBOT="certbot"
+EMAIL="daemons@mfdc.biz"
+
+# Argument processing {{{
+PARAMS=()
+while (( "$#" )); do
+	case "$1" in
+		-m|--method)
+			METHOD="$2"
+			shift
+			shift
+			;;
+		-e|--email)
+			EMAIL="$2"
+			shift
+			shift
+			;;
+		-h|--help)
+			echo "$HELP"
+			exit 0
+			;;
+		--) # end argument parsing
+			shift
+			break
+			;;
+		-*|--*=) # unsupported flags
+			echo "Error: Unsupported flag $1" >&2
+			exit 1
+			;;
+		*) # preserve positional arguments
+			PARAMS+=("$1")
+			shift
+			;;
+	esac
+done
+# }}}
+
+# Auto method detection {{{
+if [ "$METHOD" == "auto" ]; then
+	if [ -e "$HOME/.dnsmadeeasy" ]; then
+		echo "Found DME config file - assuming 'DNS Made Easy' method"
+		METHOD="nginx-dme"
+	elif [ `pgrep nginx >/dev/null; echo "$?"` == 0 ]; then
+		echo "Found Nginx process - assuming 'Nginx' method"
+		METHOD='nginx'
+	else
+		echo "Cannot automatically determine method to use - switching to 'manual' mode"
+		METHOD='manual'
+	fi
+fi
+# }}}
+
+# Certbot binary detection {{{
+if [ -x "$HOME/certbot-auto" ]; then
+	echo "Using ~/certbot-auto"
+	CERTBOT="$HOME/certbot-auto"
+elif [ -e '/var/snap/certbot' ]; then
+	CERTBOT="snap run certbot"
+	echo "Using Certbot Snap"
+elif [ `sudo which certbot >/dev/null; echo "$?"` == 0 ]; then
+	CERTBOT="certbot"
+	echo "Using Certbot binary"
+elif [ "$METHOD" == "manual" ]; then
+	CERTBOT="certbot"
+	echo "Cannot locate Certbot binary but manual mode is in use - assuming plain 'certbot'"
+else
+	CERTBOT="certbot"
+	echo "Cannot locate Certbot binary - assuming plain 'certbot'"
+fi
+# }}}
+
+echo "PARAMS: $PARAMS"
+
+# 1. Setup actual list of domains {{{
+DOMAINS=()
+for DOMAIN in "${PARAMS[@]}"; do
+	DOMAINS+=("$DOMAIN")
+	DOMAINS+=("www.$DOMAIN")
+done
+# }}}
+
+# 2. Compute command to use {{{
+CMD="sudo certbot certonly --noninteractive --standalone -m $EMAIL --agree-tos "
+for DOMAIN in "${DOMAINS[@]}"; do
+	CMD+="-d $DOMAIN "
+done
+# Trim string
+CMD=`echo $CMD | xargs`
+# }}}
+
+# 3. Compute other command actions to take per method {{{
+case "$METHOD" in
+	manual)
+		CMD="# NOTE: Manually stop any existing services on port 80\n$CMD"
+		;;
+	nginx|nginx-dme)
+		CMD="sudo systemctl stop nginx\n$CMD\nsudo systemctl start nginx"
+		;;
+esac
+# }}}
+
+# 3. Confirm action with user {{{
+echo
+echo
+echo "Certbot setup"
+echo "============="
+echo
+echo "Will register the following domains:"
+for DOMAIN in "${DOMAINS[@]}"; do
+	echo " * $DOMAIN"
+done
+echo
+echo "Using '$METHOD' method"
+echo
+echo "# --- COMMAND TO RUN --- #"
+echo -e $CMD
+echo "# ---------------------- #"
+echo
+echo "Press enter to run the above command or Ctrl+C to abort"
+read
+CMD_EXEC=${CMD//\\n/' && '}
+echo
+echo "Running [[ $CMD_EXEC ]]"
+echo
+exec "$CMD_EXEC"
+# }}}

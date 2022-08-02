@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Cronull v1 - cron job "always fine" wrapper
+# This script will run any command, silencing all output and always returning exit 0
+# Usage: cronull <command...>
+# @author Matt Carter <m@ttcarter.com>
+
+# Run incomming command, redirecting all output to null
+"$@" >/dev/null 2>/dev/null
+
+# Exit with OK signal
+exit 0

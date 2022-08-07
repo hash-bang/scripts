@@ -1,0 +1,12 @@
+#!/bin/bash
+# Ask Dig various information about a domain
+# Aka "Dig-All"
+# Usage: diga <domains...>
+
+for HOST in "$@"; do
+	declare -a TYPES=("A" "MX" "TXT")
+	for TYPE in "${TYPES[@]}"; do
+		dig +nocmd "$HOST" "$TYPE" +noall +answer @8.8.8.8
+	done
+	echo
+done

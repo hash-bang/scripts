@@ -4,7 +4,7 @@
 # Usage: diga <domains...>
 
 for HOST in "$@"; do
-	declare -a TYPES=("A" "MX" "TXT")
+	declare -a TYPES=("A" "MX" "TXT" "NS")
 	for TYPE in "${TYPES[@]}"; do
 		dig +nocmd "$HOST" "$TYPE" +noall +answer @8.8.8.8
 	done

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Grep a list of PM2 processes for a string
-# Usage: pm2-grep <match>
+# Usage: pm2-grep <glob>
 
 # Default action is to print matching packages only
 OUTPUT=list
@@ -30,7 +30,7 @@ done
 PARAMS=${PARAMS## } # remove leading spaces
 # }}}
 
-PROCS=`pm2 list | grep "$PARAMS" | cut -d ' ' -f 2`
+PROCS=`pm2 list -m | perl -ne 's/^\+--- // && print if m/^\+--- /' | egrep "$PARAMS"`
 
 if [ "$OUTPUT" == "list" ]; then
 	echo "$PROCS"

@@ -1,27 +1,14 @@
 #!/bin/bash
 # Attach to the available TMUX session if any and optionally append a new window
-# Usage: ts [command]
+# Usage: ts [session="default"] [options...]
 
-TDIR=/tmp/tmux-`id -u`
+SESSION=${1:-default}
+shift
 
-if [ -d "$TDIR" ]; then
-	# Given a command to run?
-	if [ -z "$1" ]; then
-		echo "Attaching to existing TMUX session"
-		tmux -2 -S "$TDIR/default" attach
-		if [ "$?" == 1 ]; then
-			echo "Failed to connect, starting new session"
-			tmux -2
-		fi
-	else
-		echo "Running command [$@] inside session"
-		tmux -2 -S "$TDIR/default" new-window "$@"
-		if [ "$?" == 1 ]; then
-			echo "Failed to connect, starting new session"
-			tmux -2 new-session \; new-window "$@" \; detach-client
-		fi
-	fi
+if tmux has-session -t "$SESSION"; then
+	echo "Attaching to existing TMUX session '$SESSION'"
+	tmux -2 attach-session -t "$SESSION"
 else
-	echo "Starting new TMUX session"
-	tmux -2
+	echo "Starting new TMUX session '$SESSION'"
+	tmux -2 new-session -s "$SESSION"
 fi

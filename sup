@@ -7,7 +7,9 @@ CMD1=$1
 CMD2=$2
 
 if [ -z "$CMD1" ]; then
-	if [ `which ytop >/dev/null; echo "$?"` == 0 ]; then
+	if [ `which btm >/dev/null; echo "$?"` == 0 ]; then
+		CMD1=btm
+	elif [ `which ytop >/dev/null; echo "$?"` == 0 ]; then
 		CMD1=ytop
 	elif [ `which glances >/dev/null; echo "$?"` == 0 ]; then
 		CMD1=glances

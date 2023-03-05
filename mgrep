@@ -9,7 +9,9 @@
 # -u  Update the matching packages via `npm update` - useful for Git repo linked hashes
 # -r  Remove all matching packages
 # -v  Show the current version of the matching packages
+# -x  Show packages that arn't used (via ripgrep not AST)
 #
+# If expression is omitted or 'ALL', all packages are used
 
 # Branch to exmaine for packages
 BRANCH="dependencies"
@@ -35,6 +37,10 @@ while (( "$#" )); do
 			;;
 		-u)
 			ACTION="update"
+			shift
+			;;
+		-x)
+			ACTION="unused"
 			shift
 			;;
 		-r)
@@ -86,8 +92,23 @@ BULLET="${COLOR_BBLUE}➤ ${COLOR_RESET}"
 PACKAGES=`cat package.json | o pluck $BRANCH | o map _.toPairs | o columns id version | o select id | o to --csv | tail -n +2 | sort`
 
 IFS=' ' read -a SEARCHPARAMS <<< "${PARAMS}"
+
+# If no search params given, assume 'ALL'
+if (( ${#SEARCHPARAMS[@]} == 0 )); then
+	echo "Searching all packages"
+	SEARCHPARAMS=('ALL')
+fi
+
 for SEARCH in ${SEARCHPARAMS[@]}; do
-	for PKG in `echo "$PACKAGES" | grep -Fi "$SEARCH"`; do
+
+	# If no arg given above injects "ALL" which should search all
+	if [ "$SEARCH" == 'ALL' ]; then
+		PKG_LIST=$PACKAGES
+	else
+		PKG_LIST=`echo "$PACKAGES" | grep -Fi "$SEARCH"`
+	fi
+
+	for PKG in $PKG_LIST; do
 		case "$ACTION" in
 			"linegrep")
 				echo -n "${PKG} "
@@ -126,6 +147,11 @@ for SEARCH in ${SEARCHPARAMS[@]}; do
 				if [ "$?" != 0 ]; then
 					echo "Aborted remove due to NPM returning a non-zero exit code"
 					exit 1
+				fi
+				;;
+			"unused")
+				if [ `rg -qP --glob '!package.json' 'require\(.lodash.\)|from .lodash.'; echo "$?"` != 0 ]; then
+					echo "$PKG"
 				fi
 				;;
 			"version")

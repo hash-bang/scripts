@@ -20,6 +20,7 @@ Unlike the regular \"certbot renew\" process this script has the following behav
 			\"nginx\"      - Full server renew via Nginx service start / stop (uses LE: standalone method)
 			\"nginx-dme\"  - DNS-Made-Easy DNS auth (uses LE: DME method)
 			\"nginx-wr\"   - Use Nginx + Webroot (via /var/www) (uses LE: webroot method)
+			\"pm2\"        - Stop all PM2 procs, renew via certbot server + restart PM2 procs
 
 -h, --help                 Show command line help
 "
@@ -123,11 +124,14 @@ elif [ "$METHOD" == 'nginx-wr' ]; then
 		exit 1
 	fi
 	sudo mkdir /var/www/.well-known
+elif [ "$METHOD" == 'pm2' ]; then
+	echo "Stopping PM2 procs..."
+	pm2 stop all
 fi
 # }}}
 
 # 2. Renewal {{{
-if [[ "$METHOD" == 'apache' ||  "$METHOD" == 'nginx' ]]; then
+if [[ "$METHOD" == 'apache' ||  "$METHOD" == 'nginx' || "$METHOD" == 'pm2' ]]; then
 	echo "Renewing via standalone..."
 	sudo $CERTBOT renew --standalone
 elif [ "$METHOD" == 'nginx-wr' ]; then
@@ -155,6 +159,9 @@ elif [ "$METHOD" == 'nginx-wr' ]; then
 elif [ "$METHOD" == "nginx-dme" ]; then
 	echo "Reloading Nginx certificate data..."
 	sudo systemctl reload nginx
+elif [ "$METHOD" == "pm2" ]; then
+	echo "Restarting all PM2 procs..."
+	pm2 start all
 fi
 # }}}
 

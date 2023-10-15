@@ -1,0 +1,58 @@
+#!/bin/bash
+HELP="
+Utility command functions for iDrive360
+
+Usage: idrive <command>
+
+Commands:
+
+idrive help              This help screen
+
+idrive start             Start the iDrive Cron + system task
+
+idrive stop              Try to (politely) shut down the iDrive process
+
+idrive kill              Try to agressively shut down any remaining iDrive processess
+"
+
+CMD="$1"
+case "$CMD" in
+	"help")
+		echo "$HELP"
+		exit
+		;;
+	"start")
+		echo "Starting main iDrive process"
+		/opt/idrive360/Idrivelib/dependencies/python/idrive360 start
+
+		echo "Installing Cron system unit"
+		/opt/idrive360/Idrivelib/dependencies/python/idrive360 6
+
+		echo "Starting Cron unit"
+		systemctl start idrive360cron
+		;;
+
+	"stop")
+		echo "Stopping iDrive process"
+		/opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+
+		echo "Stop iDrive cron system unit"
+		systemctl stop idrive360cron
+		;;
+
+	"kill")
+		echo "Politely killing iDrive processes"
+		pkill -i idrive
+
+		if [ `pgrep -i idrive; echo "$?"` == '0' ]; then
+			echo "Processes are still running"
+			sleep 1m
+
+			echo "Agressively killing iDrive processes"
+			pkill -i -9 idrive
+		fi
+		;;
+
+	*)
+		echo "Unknown iDrive comamnd"
+esac

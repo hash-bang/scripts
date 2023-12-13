@@ -30,6 +30,8 @@ case "$CMD" in
 
 		echo "Starting Cron unit"
 		systemctl start idrive360cron
+
+		exit 0
 		;;
 
 	"stop")
@@ -38,6 +40,8 @@ case "$CMD" in
 
 		echo "Stop iDrive cron system unit"
 		systemctl stop idrive360cron
+
+		exit
 		;;
 
 	"kill")
@@ -51,8 +55,11 @@ case "$CMD" in
 			echo "Agressively killing iDrive processes"
 			pkill -i -9 idrive
 		fi
+
+		exit
 		;;
 
 	*)
 		echo "Unknown iDrive comamnd"
+		exit 1
 esac

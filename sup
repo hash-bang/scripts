@@ -24,6 +24,10 @@ if [ -z "$CMD2" ]; then
 	CMD2="pm2 logs"
 fi
 
-tmux new-session -d -s sup $CMD1
-tmux split-window -t sup $CMD2
-tmux attach-session -t sup
+if [ `tmux has-session; echo $?` == 0 ]; then
+	tmux attach-session -t sup
+else
+	tmux new-session -d -s sup $CMD1
+	tmux split-window -t sup $CMD2
+	tmux attach-session -t sup
+fi

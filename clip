@@ -4,19 +4,37 @@
 # Usage:
 #
 #	# Output all clipboard contents
-# 	clip
+# 	clip [type]
 #
 #	# Set the clipboard contents
 #	clip <foo.txt
 #
 #	# Set the clipboard contents via a pipe
 #	cat foo.txt | clip
+#
+#   # Types
+#   text (default)    Read/write as text strings
+#   png               Read/write images in PNG format
+
+# Set default behaviour of xclip
+SUFFIX=
+
+case "${1:-text}" in
+	text)
+	;;
+	png)
+		SUFFIX="-t image/png"
+	;;
+	*)
+		echo "Unsupported read/write type '${1}'"
+		exit 1
+esac
 
 tty -s
 if [ "$?" == 0 ]; then
 	# Is a user - output clipboard contents
-	xclip -o -selection clipboard
+	xclip -o -selection clipboard $SUFFIX
 else
 	# Is probably a pipe - read into clipboard
-	xclip -i -selection clipboard </dev/stdin
+	xclip -i -selection clipboard $SUFFIX < /dev/stdin
 fi

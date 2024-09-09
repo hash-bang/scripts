@@ -5,7 +5,7 @@
 #
 
 # Prefix of DB filesystem
-PREFIX="/home/mc/Papers"
+PREFIX="$HOME/Dropbox"
 
 DBPID=`ps -C 'dropbox' -o '%p' | tr -d ' \nPID'` 
 if [ -z "$DBPID" ]; then
@@ -15,4 +15,4 @@ fi
 
 echo "Watching Dropbox (PID=$DBPID)..."
 
-sudo strace -p "$DBPID" -f -e open 2>&1 | grep -v '\.dropbox' | cut -d'"' -f 2 | grep "$PREFIX" | uniq
+sudo strace -p "$DBPID" -f --decode-fds=path -e trace=open,openat 2>&1 | grep "$PREFIX" | perl -pe 's/^.*= \d+<(.+?)>$/$1/gm'

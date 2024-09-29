@@ -41,7 +41,7 @@ case "$CMD" in
 		echo "Stop iDrive cron system unit"
 		systemctl stop idrive360cron
 
-		exit
+		exit 0
 		;;
 
 	"kill")
@@ -56,7 +56,7 @@ case "$CMD" in
 			pkill -i -9 idrive
 		fi
 
-		exit
+		exit 0
 		;;
 
 	*)

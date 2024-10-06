@@ -45,15 +45,20 @@ case "$CMD" in
 		;;
 
 	"kill")
-		echo "Politely killing iDrive processes"
-		pkill -i idrive
+		if pgrep -i idrive; then
+			echo "iDrive not running"
+		else
+			echo "Politely killing iDrive processes"
+			pkill -i idrive
+			if pgrep -i idrive; then
+				echo "iDrive still running - waiting 10s + agressive kill"
+				sleep 10
 
-		if [ `pgrep -i idrive; echo "$?"` == '0' ]; then
-			echo "Processes are still running"
-			sleep 1m
-
-			echo "Agressively killing iDrive processes"
-			pkill -i -9 idrive
+				if pgrep -i idrive; then
+					echo "Agressively killing iDrive processes"
+					pkill -i -9 idrive
+				fi
+			fi
 		fi
 
 		exit 0

@@ -45,16 +45,16 @@ case "$CMD" in
 		;;
 
 	"kill")
-		if [ `pgrep -cif idrive | awk '{print $1-1}' || echo 0` < 1 ]; then
+		if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 			echo "iDrive not running"
 		else
 			echo "Politely killing iDrive processes"
 			pgrep -if idrive | grep -v $$ | xargs kill
-			if pgrep -i idrive; then
+			if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 				echo "iDrive still running - waiting 10s + agressive kill"
 				sleep 10
 
-				if [ `pgrep -cif idrive | awk '{print $1-1}' || echo 0` >= 1 ]; then
+				if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 					echo "Agressively killing iDrive processes"
 					pgrep -if idrive | grep -v $$ | xargs kill -9
 				fi

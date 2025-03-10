@@ -24,7 +24,7 @@ if [ -z "$CMD2" ]; then
 	CMD2="pm2 logs"
 fi
 
-if [ `tmux has-session; echo $?` == 0 ]; then
+if [ `tmux has-session -t sup; echo $?` == 0 ]; then
 	tmux attach-session -t sup
 else
 	tmux new-session -d -s sup $CMD1

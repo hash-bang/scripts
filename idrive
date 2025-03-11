@@ -29,7 +29,7 @@ case "$CMD" in
 		/opt/idrive360/Idrivelib/dependencies/python/idrive360 6
 
 		echo "Starting Cron unit"
-		systemctl start idrive360cron
+		sudo systemctl start idrive360cron
 
 		exit 0
 		;;
@@ -39,24 +39,24 @@ case "$CMD" in
 		/opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
 
 		echo "Stop iDrive cron system unit"
-		systemctl stop idrive360cron
+		sudo systemctl stop idrive360cron
 
 		exit 0
 		;;
 
 	"kill")
-		if [ "$(pgrep -cif idrive)" -ge 1 ]; then
+		if [ "$(pgrep -cif idrive)" == 0 ]; then
 			echo "iDrive not running"
 		else
 			echo "Politely killing iDrive processes"
-			pgrep -if idrive | grep -v $$ | xargs kill
+			pgrep -if idrive | grep -v $$ | sudo xargs kill
 			if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 				echo "iDrive still running - waiting 10s + agressive kill"
 				sleep 10
 
 				if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 					echo "Agressively killing iDrive processes"
-					pgrep -if idrive | grep -v $$ | xargs kill -9
+					pgrep -if idrive | grep -v $$ | sudo xargs kill -9
 				fi
 			fi
 		fi

@@ -21,7 +21,23 @@ case "$CMD" in
 		echo "$HELP"
 		exit
 		;;
+
+	"query")
+		if [ "$(pgrep -cif idrive)" == 0 ]; then
+			echo "iDrive is not running"
+		else
+			echo "iDrive is running"
+		fi
+		exit 0
+		;;
+
+
 	"start")
+		if [ "$(pgrep -cif idrive)" == 0 ]; then
+			echo "iDrive already running"
+			exit 0
+		fi
+
 		echo "Starting main iDrive process"
 		/opt/idrive360/Idrivelib/dependencies/python/idrive360 start
 
@@ -35,6 +51,11 @@ case "$CMD" in
 		;;
 
 	"stop")
+		if [ "$(pgrep -cif idrive)" == 0 ]; then
+			echo "iDrive not running"
+			exit 0
+		fi
+
 		echo "Stopping iDrive process"
 		/opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
 
@@ -50,6 +71,7 @@ case "$CMD" in
 		else
 			echo "Politely killing iDrive processes"
 			pgrep -if idrive | grep -v $$ | sudo xargs kill
+
 			if [ "$(pgrep -cif idrive)" -ge 1 ]; then
 				echo "iDrive still running - waiting 10s + agressive kill"
 				sleep 10

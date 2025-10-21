@@ -39,10 +39,10 @@ case "$CMD" in
 		fi
 
 		echo "Starting main iDrive process"
-		/opt/idrive360/Idrivelib/dependencies/python/idrive360 start
+		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 start
 
 		echo "Installing Cron system unit"
-		/opt/idrive360/Idrivelib/dependencies/python/idrive360 6
+		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 6
 
 		echo "Starting Cron unit"
 		sudo systemctl start idrive360cron

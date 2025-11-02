@@ -23,7 +23,7 @@ case "$CMD" in
 		;;
 
 	"query")
-		if [ "$(pgrep -cif idrive)" == 0 ]; then
+		if [ -z "$(pgrep -if idrive360)" ]; then
 			echo "iDrive is not running"
 		else
 			echo "iDrive is running"

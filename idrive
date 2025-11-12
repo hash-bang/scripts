@@ -22,11 +22,23 @@ case "$CMD" in
 		exit
 		;;
 
+
+	"check")
+		if [ ! -e "/opt/idrive360/Idrivelib/dependencies/perl/perl" ]; then
+			echo "Perl dependency missing - fixing"
+			sudo ln -s /usr/bin/perl /opt/idrive360/Idrivelib/dependencies/perl/perl
+		else
+			echo "Perl dependency OK"
+		fi
+		exit 0
+		;;
+
+
 	"query")
 		if [ -z "$(pgrep -if idrive360)" ]; then
-			echo "iDrive is not running"
+			echo "iDrive is NOT running"
 		else
-			echo "iDrive is running"
+			echo "iDrive IS running"
 		fi
 		exit 0
 		;;
@@ -39,10 +51,12 @@ case "$CMD" in
 		fi
 
 		echo "Starting main iDrive process"
-		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 start
+		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 6
+		echo
 
 		echo "Installing Cron system unit"
-		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 6
+		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 7
+		echo
 
 		echo "Starting Cron unit"
 		sudo systemctl start idrive360cron

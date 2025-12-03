@@ -71,7 +71,7 @@ case "$CMD" in
 		fi
 
 		echo "Stopping iDrive process"
-		/opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
 
 		echo "Stop iDrive cron system unit"
 		sudo systemctl stop idrive360cron

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Check the SSL certificate for a given URL
+# usage: check-ssl [acme.com]
+
+nmap -p 443 --script ssl-cert "$1"

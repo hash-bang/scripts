@@ -83,6 +83,15 @@ case "$CMD" in
 		if [ "$(pgrep -cif idrive)" == 0 ]; then
 			echo "iDrive not running"
 		else
+			echo "Politely stopping iDrive process"
+			sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+
+			echo "Politely stop iDrive cron system unit"
+			sudo systemctl stop idrive360cron
+
+			echo "Wait 10s"
+			sleep 10
+
 			echo "Politely killing iDrive processes"
 			pgrep -if idrive | grep -v $$ | sudo xargs kill
 

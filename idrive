@@ -15,6 +15,36 @@ idrive stop              Try to (politely) shut down the iDrive process
 idrive kill              Try to agressively shut down any remaining iDrive processess
 "
 
+# Utility functions {{{
+
+# Return if the iDrive process is running
+# @example
+# if idriveIsRunning 'idrive'; then; ...; fi
+function idriveIsRunning() {
+	[ "$(pgrep -cif idrive)" -gt 0 ]
+}
+
+# Try to close down iDrive politely
+function idriveClose {
+	echo "Stopping iDrive process"
+	sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+
+	echo "Stop iDrive cron system unit"
+	sudo systemctl stop idrive360cron
+}
+
+# Politely kill any remaining iDrive processes
+function idriveClosePolite {
+	pgrep -if idrive | grep -v $$ | sudo xargs kill
+}
+
+# Violently close iDrive
+function idriveCloseViolent {
+	pgrep -if idrive | grep -v $$ | sudo xargs kill -9
+}
+# }}}
+
+
 CMD="$1"
 case "$CMD" in
 	"help")
@@ -35,7 +65,7 @@ case "$CMD" in
 
 
 	"query")
-		if [ -z "$(pgrep -if idrive360)" ]; then
+		if idriveIsRunning; then
 			echo "iDrive is NOT running"
 		else
 			echo "iDrive IS running"
@@ -45,7 +75,7 @@ case "$CMD" in
 
 
 	"start")
-		if [ "$(pgrep -cif idrive)" == 0 ]; then
+		if idriveIsRunning; then
 			echo "iDrive already running"
 			exit 0
 		fi
@@ -65,46 +95,43 @@ case "$CMD" in
 		;;
 
 	"stop")
-		if [ "$(pgrep -cif idrive)" == 0 ]; then
+		if idriveIsRunning; then
 			echo "iDrive not running"
 			exit 0
 		fi
 
-		echo "Stopping iDrive process"
-		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
-
-		echo "Stop iDrive cron system unit"
-		sudo systemctl stop idrive360cron
+		idriveClosePolite
 
 		exit 0
 		;;
 
 	"kill")
-		if [ "$(pgrep -cif idrive)" == 0 ]; then
+		if ! idriveIsRunning; then
 			echo "iDrive not running"
-		else
-			echo "Politely stopping iDrive process"
-			sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+			exit 0
+		fi
 
-			echo "Politely stop iDrive cron system unit"
-			sudo systemctl stop idrive360cron
+		echo "Politely stopping iDrive services"
+		idriveClose
 
-			echo "Wait 10s"
+		if ! idriveIsRunning; then
+			echo "iDrive exited correctly"
+			exit 0
+		fi
+
+		echo "iDrive still running - waiting 10s + polite kill"
+		sleep 10
+
+		echo "Politely killing iDrive processes"
+		idriveClosePolite
+
+		while idriveIsRunning; do
+			echo "iDrive still running - waiting 10s + agressive kill"
 			sleep 10
 
-			echo "Politely killing iDrive processes"
-			pgrep -if idrive | grep -v $$ | sudo xargs kill
-
-			if [ "$(pgrep -cif idrive)" -ge 1 ]; then
-				echo "iDrive still running - waiting 10s + agressive kill"
-				sleep 10
-
-				if [ "$(pgrep -cif idrive)" -ge 1 ]; then
-					echo "Agressively killing iDrive processes"
-					pgrep -if idrive | grep -v $$ | sudo xargs kill -9
-				fi
-			fi
-		fi
+			echo "Agressively killing iDrive processes"
+			idriveCloseViolent
+		done
 
 		exit 0
 		;;

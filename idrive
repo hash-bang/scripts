@@ -21,7 +21,7 @@ idrive kill              Try to agressively shut down any remaining iDrive proce
 # @example
 # if idriveIsRunning 'idrive'; then; ...; fi
 function idriveIsRunning() {
-	[ "$(pgrep -cif idrive)" -gt 0 ]
+	[ "$(pgrep -cif idrive360)" -gt 0 ]
 }
 
 # Try to close down iDrive politely
@@ -35,12 +35,12 @@ function idriveClose {
 
 # Politely kill any remaining iDrive processes
 function idriveClosePolite {
-	pgrep -if idrive | grep -v $$ | sudo xargs -r kill
+	pgrep -if idrive360 | grep -v $$ | sudo xargs -r kill
 }
 
 # Violently close iDrive
 function idriveCloseViolent {
-	pgrep -if idrive | grep -v $$ | sudo xargs -r kill -9
+	pgrep -if idrive360 | grep -v $$ | sudo xargs -r kill -9
 }
 # }}}
 

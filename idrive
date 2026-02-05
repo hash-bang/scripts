@@ -126,12 +126,14 @@ case "$CMD" in
 		idriveClosePolite
 
 		while idriveIsRunning; do
-			echo "iDrive still running - waiting 10s + agressive kill"
+			echo "... iDrive still running - waiting 10s + agressive kill"
 			sleep 10
 
-			echo "Agressively killing iDrive processes"
+			echo "... Agressively killing iDrive processes"
 			idriveCloseViolent
 		done
+
+		echo "iDrive has been killed"
 
 		exit 0
 		;;

@@ -35,12 +35,12 @@ function idriveClose {
 
 # Politely kill any remaining iDrive processes
 function idriveClosePolite {
-	pgrep -if idrive | grep -v $$ | sudo xargs kill
+	pgrep -if idrive | grep -v $$ | sudo xargs -r kill
 }
 
 # Violently close iDrive
 function idriveCloseViolent {
-	pgrep -if idrive | grep -v $$ | sudo xargs kill -9
+	pgrep -if idrive | grep -v $$ | sudo xargs -r kill -9
 }
 # }}}
 

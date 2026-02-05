@@ -66,9 +66,9 @@ case "$CMD" in
 
 	"query")
 		if idriveIsRunning; then
-			echo "iDrive is NOT running"
-		else
 			echo "iDrive IS running"
+		else
+			echo "iDrive is NOT running"
 		fi
 		exit 0
 		;;
@@ -95,7 +95,7 @@ case "$CMD" in
 		;;
 
 	"stop")
-		if idriveIsRunning; then
+		if ! idriveIsRunning; then
 			echo "iDrive not running"
 			exit 0
 		fi
@@ -107,7 +107,7 @@ case "$CMD" in
 
 	"kill")
 		if ! idriveIsRunning; then
-			echo "iDrive not running"
+			echo "iDrive not running anyway"
 			exit 0
 		fi
 

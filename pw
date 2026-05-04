@@ -8,7 +8,7 @@ PASS=`pwgen 32 -N1`
 echo "$PASS" | tr -d '\n' | xclip -i -selection clipboard
 
 if [ "$1" == '--notify' ]; then
-	notify-send "Password copied to clipboard" -i /usr/share/icons/Humanity/status/24/keys.svg -t 3
+	notify-send "Password copied to clipboard" -i /usr/share/icons/Humanity/status/24/keys.svg
 else
 	echo "Password: $PASS"
 fi

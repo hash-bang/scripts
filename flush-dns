@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( EUID != 0 )); then
+	exec sudo "$0" "$@"
+fi
+
+flushed=0
+
+# systemd-resolved
+if command -v resolvectl &>/dev/null; then
+	resolvectl flush-caches && echo 'Flushed systemd-resolved cache' && flushed=1
+elif systemctl is-active --quiet systemd-resolved 2>/dev/null; then
+	systemd-resolve --flush-caches && echo 'Flushed systemd-resolved cache (legacy cmd)' && flushed=1
+fi
+
+# nscd
+if systemctl is-active --quiet nscd 2>/dev/null; then
+	systemctl restart nscd && echo 'Restarted nscd' && flushed=1
+elif command -v nscd &>/dev/null; then
+	nscd -i hosts && echo 'Invalidated nscd hosts cache' && flushed=1
+fi
+
+# dnsmasq
+if systemctl is-active --quiet dnsmasq 2>/dev/null; then
+	systemctl restart dnsmasq && echo 'Restarted dnsmasq' && flushed=1
+elif pgrep -x dnsmasq &>/dev/null; then
+	killall -HUP dnsmasq && echo 'Sent HUP to dnsmasq' && flushed=1
+fi
+
+# NetworkManager with dnsmasq plugin
+if systemctl is-active --quiet NetworkManager 2>/dev/null && \
+   grep -qrs 'dns=dnsmasq' /etc/NetworkManager/ 2>/dev/null; then
+	systemctl restart NetworkManager && echo 'Restarted NetworkManager (dnsmasq plugin)' && flushed=1
+fi
+
+if (( flushed == 0 )); then
+	echo 'No known DNS cache service detected. Cache may not be active.' >&2
+	exit 1
+fi

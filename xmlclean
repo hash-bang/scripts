@@ -1,11 +1,16 @@
 #!/bin/bash
-# Usage: PIPE | xmlclean | PIPE
-# Formats an XML pipe from a STDIN stream
-# Author: Matt Carter <m@ttcarter.com>
+# Cleans a given input XML file, overwriting the original
+# Usage: xmlclean <path>
 
-INFILE=`mktemp`
-OUTFILE=`mktemp`
-cat /dev/stdin >"$INFILE"
-xmllint --format "$INFILE" --output "$OUTFILE"
-cat "$OUTFILE"
-rm "$OUTFILE" "$INFILE"
+if [ -z "$1" ]; then
+	echo "Usage: $0 <file>"
+	exit 1
+fi
+
+if [ ! -f "$1" ]; then
+	echo "Error: File '$1' not found"
+	exit 1
+fi
+
+temp=$(mktemp)
+xmllint --format "$1" --output "$temp" && mv "$temp" "$1" || rm -f "$temp"

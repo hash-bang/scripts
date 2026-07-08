@@ -1,0 +1,23 @@
+#!/bin/bash
+# Use 'fd' + 'fzf' to pick a file to edit in VIM
+
+# Check if a glob pattern is provided
+if [ $# -ne 1 ]; then
+	echo "Usage: fdv <glob_pattern>"
+	exit 1
+fi
+
+# Store the glob pattern
+PATTERN="$1"
+
+# Use fd to find files matching the pattern and pipe to fzf
+# Allow multiple selections with tab/shift+tab
+selected_files=$(fd "$PATTERN" | fzf --multi --preview 'bat --color=always --style=numbers --line-range=:500 {}' --height 80% --border)
+
+# Check if any files were selected
+if [ -n "$selected_files" ]; then
+	# Open each selected file with vi
+	vi $selected_files
+else
+	echo "No files selected"
+fi

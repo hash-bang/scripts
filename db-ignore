@@ -1,0 +1,16 @@
+#!/bin/bash
+# Set various files to be ignored by Dropbox during its sync
+# Usage: db-ignore [files...]
+
+for FILE in "$@"; do
+
+	# Set eXtended Attribute so Dropbox (in theory) ignores this file
+	HAS_ATTR=`attr -qg com.dropbox.ignored "$FILE" 2>/dev/null || echo "0"`
+	if [ "$HAS_ATTR" == '0' ]; then
+		attr -qs com.dropbox.ignored -V 1 "$FILE" 2>/dev/null
+	fi
+
+	# Add to Dropbox exclude list
+	dropbox exclude add "$FILE" >/dev/null 2>/dev/null
+
+done

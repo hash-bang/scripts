@@ -1,0 +1,25 @@
+#!/bin/bash
+# Download (if necessary) and run a local Beeper client
+
+# Stop on fails
+set -euo pipefail
+
+BEEPER_URL="https://api.beeper.com/desktop/download/linux/x64/stable/com.automattic.beeper.desktop"
+BEEPER_BIN="/tmp/beeper.bin"
+
+echo "Updating local Beeper image..."
+wget --show-progress "${BEEPER_URL}" -O "${BEEPER_BIN}"
+
+if [ ! -e "${BEEPER_BIN}" ]; then
+	echo "Beeper failed to download"
+	exit 1
+elif [ ! -s "${BEEPER_BIN}" ]; then
+	echo "Beeper download is of zero-length. Aborting."
+	rm "${BEEPER_BIN}"
+	exit 1
+fi
+
+chmod +x "${BEEPER_BIN}"
+
+echo "Starting Beeper UI"
+"${BEEPER_BIN}" --no-sandbox

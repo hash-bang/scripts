@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Simple script to toggle the running of a given script along with a notification
+#
+# Usage: toggle-runner <command> [arguments]
+#
+
+# Enable the last item within a pipeline returning its exit code
+set -o pipefail
+
+if [ -z $(pgrep --full --list-full "$1" | grep -v toggle-runner) ]; then
+	echo "Running $1"
+	notify-send "Started: $1"
+	eval "$@" &
+else
+	echo "Stopping $1"
+	notify-send "Stopped: $1"
+	pkill --full "$1"
+fi

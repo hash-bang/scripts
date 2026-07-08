@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+=head1 NAME
+
+files - Extract file paths from STDIN input
+
+=head1 SYNOPSIS
+
+	files < input.txt
+	cat logfile.txt | files
+	echo "Error in /var/log/app.log" | files
+
+=head1 DESCRIPTION
+
+This script reads text from STDIN and extracts file paths, printing each found path on a separate line.
+It filters out all other content and shows only the extracted paths.
+
+The script matches two types of paths:
+
+=over 4
+
+=item * Absolute paths starting with / (Unix/Linux style)
+
+Examples: /home/user/file.txt, /var/log/app.log, /etc/config
+
+=item * Relative dotted paths starting with ./ or ../
+
+Examples: ./config/app.conf, ../docs/readme.md, ./script.sh
+
+=back
+
+=head1 EXAMPLES
+
+	# Filter paths from a log file
+	cat app.log | files
+
+	# Extract paths from command output
+	find /home -name "*.txt" 2>&1 | files
+
+	# Process multiple lines with mixed content
+	echo "Error in /var/log/app.log and ./config/settings.ini" | files
+=cut
+
+# Read from STDIN line by line
+while (my $line = <STDIN>) {
+	chomp $line;
+
+	# Find and extract file paths
+	# This regex matches ONLY:
+	# - Absolute paths starting with / (Unix/Linux)
+	# - Relative dotted paths starting with ./ or ../
+
+	# Find all matching paths in the line
+	my @paths;
+
+	# Absolute Unix/Linux paths starting with /
+	while ($line =~ m{(?:^|[\s\'"(])(/[^\s<>"'|*?]+)(?=[\s\'")<>|]|$)}g) {
+		push @paths, $1;
+	}
+
+	# Reset position for next search
+	pos($line) = 0;
+
+	# Relative dotted paths starting with ./ or ../
+	while ($line =~ m{(?:^|[\s\'"(])(\.\./[^\s<>"'|*?]*|\./[^\s<>"'|*?]*)(?=[\s\'")<>|]|$)}g) {
+		push @paths, $1;
+	}
+
+	# Print each extracted path on its own line
+	for my $path (@paths) {
+		print "$path\n";
+	}
+}

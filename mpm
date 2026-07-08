@@ -1,0 +1,179 @@
+#!/bin/bash
+# MC's wrapped version of NPM
+#
+# Usage: 'mpm <npm arguments...>'
+#
+# Extends the default NPM command with a few more features:
+#
+# * 'mpm link|ln <PATH>'                  Link a local resource (really just an alias)
+# * 'mpm links|lns'                       Show currently linked resources
+# * 'mpm lock'                            Prepare package-lock.json file
+# * 'mpm relock'                          Rebuild a package-lock.json file from installed packages via NPM
+# * 'mpm delink|flatten|flat|unlink'      Flatten all linked NPMs into their most recent releases
+# * 'mpm swap <FROM> <TO>'                Remove + install wrapper
+# * 'mpm grep <EXPRESSION> [args]'        Wrapper to mgrep
+# * 'mpm publish [args]'                  Wrapper around publish which forces the NPM registry
+# * 'mpm repack'                          Remove 'package-lock.json' + 'npm i' to rebuild
+# * 'mpm latest|up|uplift <GLOBS>'        Upgrade all matching globs to latest (uses `mgrep -i`)
+# * 'mpm todev <pkgs...>'                 Move dependencies -> devDependencies
+# * 'mpm toopt <pkgs...>'                 Move dependencies -> optionalDependencies
+# * 'mpm topeer <pkgs...>'                Move dependencies -> peerDependencies
+# * 'mpm toprod <pkgs...>'                Move devDependencies -> dependencies
+# * 'mpm unsafe|iu <pkgs...>'             Install a package while also overriding min-release-age
+#
+# Notes:
+# * 'Install', 'CleanInstall' operations automatically mark the 'node_modules' directory as ignored by Dropbox
+
+NPM_BIN=`which npm`
+NPM_CMD="$1"
+MGREP_BIN="/home/mc/Scripts/mgrep"
+NEED_RELOCK=0
+
+# func: relock {{{
+function relock {
+	perl -pi -e 's!http://zapp:4873!https://registry.npmjs.org!g' package-lock.json
+}
+# }}}
+
+# Pre-flight checks {{{
+if [ ! -f 'package.json' ]; then
+	echo "package.json not found, is this the base directory for the project?"
+	exit 1
+fi
+# }}}
+
+# Pre command hooks {{{
+case "$NPM_CMD" in
+	delink|flatten|flat|unlink)
+		PKGS=`rg 'file:' package.json | perl -pe 's/^\s+"(.+?)".+$/$1/g; s/\n/ /g'`
+		if [ -z "$PKGS" ]; then
+			echo "No linked NPMs to flatten"
+			exit 1
+		fi
+		echo "Flattening links on NPMs: $PKGS"
+		"$MGREP_BIN" -i $PKGS
+		relock
+		exit 0
+		;;
+	i|install|ci|cleaninstall)
+		if [ ! -d "node_modules" ]; then
+			echo "Creating stub for node_modules + marking as ignored"
+			mkdir "node_modules"
+			db-ignore "node_modules"
+		fi
+		;;
+	grep)
+		shift
+		"$MGREP_BIN" "$@"
+		exit 0
+		;;
+	latest|up|uplift)
+		"$MGREP_BIN" -i "$@"
+		relock
+		exit 0
+		;;
+	link|ln)
+		NPM_CMD=link
+		# Pass
+		;;
+	links|lns)
+		rg 'file:' package.json | perl -pe 's/^\s+"(.+?)".+$/$1/g'
+		exit 0
+		;;
+	lock)
+		relock
+		exit 0
+		;;
+	publish)
+		shift
+		relock
+		echo "Checking package-lock.json"
+		if [ `grep -q https://zapp package-lock.json; echo "$?"` != 1 ]; then
+			echo "Refusing to publish - package-lock contains non-standard registry URLs - use 'mpm lock' to correct"
+			exit 1
+		fi
+		echo "Publishing to main NPM repo"
+		npm publish --registry=https://registry.npmjs.org "$@"
+		exit 0
+		;;
+	repack|relock)
+		if [ -e "package-lock.json" ]; then
+			rm "package-lock.json"
+		fi
+		"$NPM_BIN" i --package-lock-only
+		relock
+		exit 0
+		;;
+	swap)
+		shift
+		FROM="$1"
+		TO="$2"
+		shift; shift
+		echo "Swapping NPM ${FROM} -> ${TO}..."
+		"$NPM_BIN" rm "$FROM" && "$NPM_BIN" install "$TO" "$@"
+		relock
+		exit 0
+		;;
+	todev)
+		shift
+		PKGS="$@"
+		shift; shift
+		echo "Moving production -> devDependencies..."
+		"$NPM_BIN" rm "$PKGS" && "$NPM_BIN" install -D "$PKGS"
+		relock
+		exit 0
+		;;
+	toopt)
+		shift
+		PKGS="$@"
+		shift; shift
+		echo "Moving production -> optionalDependencies..."
+		"$NPM_BIN" rm "$PKGS" && "$NPM_BIN" install --save-optional "$PKGS"
+		relock
+		exit 0
+		;;
+	topeer)
+		shift
+		PKGS="$@"
+		shift; shift
+		echo "Moving production -> peerDependencies..."
+		"$NPM_BIN" rm "$PKGS" && "$NPM_BIN" install --save-peer "$PKGS"
+		relock
+		exit 0
+		;;
+	toprod)
+		shift
+		PKGS="$@"
+		shift; shift
+		echo "Moving {optional,dev,peer}Dependencies -> production..."
+		"$NPM_BIN" rm "$PKGS" && "$NPM_BIN" install --save "$PKGS"
+		relock
+		exit 0
+		;;
+	unsafe|iu)
+		echo "Installing in unsafe-mode..."
+		"$NPM_BIN" --min-release-age 0 install "$@"
+		exit 0
+		;;
+	*)
+		# echo "No action for pre-command [$NPM_CMD]"
+		;;
+esac
+# }}}
+
+# Run actual NPM command {{{
+"$NPM_BIN" "$@"
+# }}}
+
+# Post command hooks {{{
+case "$NPM_CMD" in
+	i|install|ci|cleaninstall|repack)
+		# Mark node_modules as non-syncable by Dropbox
+		db-ignore "node_modules"
+		relock
+		;;
+	*)
+		# echo "No action for post-command [$NPM_CMD]"
+		;;
+esac
+# }}}

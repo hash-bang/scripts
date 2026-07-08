@@ -1,12 +1,12 @@
 #!/bin/bash
-# Lock the screen, restarting the xscreensaver daemon if its not already present
+# Lock the screen via the standard XFCE4 locking system
 # Usage: lock-screen
 
-pgrep xscreensaver >/dev/null
-if [ "$?" != 0 ]; then
-	echo "X-Screensaver not running, starting now..."
-	xscreensaver -nosplash &
-	sleep 1
+# Kill cursr on non-Slab machines so it doesn't bugger up Slabs unlock
+if [ `hostname` != 'Slab' ]; then
+	echo "Killing session sharing daemons"
+	pkill cursr
 fi
 
-xscreensaver-command -lock &
+echo "Locking screen"
+xflock4 &

@@ -14,7 +14,7 @@ if [[ "$INPUT" == *@* ]]; then
 	SESSION="${SESSION:-default}"
 
 	echo "Dialing into '$HOST' via mosh to establish Tmux session '$SESSION'"
-	mosh "$HOST" -- ~/Scripts/tosh "$SESSION" "$@"
+	mosh "$HOST" -- ~/Scripts/tm "$SESSION" "$@"
 else
 	SESSION="$INPUT"
 

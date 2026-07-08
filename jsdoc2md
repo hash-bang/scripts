@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+# Take a block of JSDoc code and convert to a Markdown compatible table
+# This file is intended to be used in a pipeline
+#
+# Usage: ./jsdoc <input >output
+
+while (<>) {
+	chomp;
+
+	# Parse into syntax
+	my ($type, $name, $description) =
+		m/^\*\s+@(?:property|prop|param)\s+\{(?<type>.+?)\}\s+(?<name>.+?)\s+(?<description>.*)$/;
+
+	# DEFAULT (from name)
+	my $default = '';
+	if ($name =~ /=/) {
+		($default) = $name =~ m/=(.+?)\]?$/;
+		$default = '`' . $default . '`';
+	}
+
+	# NAME
+	$name =~ s/^\[(.+)\]$/${1}/; # Tidy name by removing optional square brackets
+	$name = '`' . $name . '`'; # Enclose name in backticks
+
+	# TYPE
+	my @types = split(/\s*\|\s*/, $type);
+	@types = map { '`' . ucfirst . '`' } @types; # UC first each word + encose in backticks
+	$type = join(' / ', @types);
+
+	next if (!$name); # Skip broken parsing
+
+	# Output
+	print "|  ${name}  |  ${type}  |  ${default}  |  ${description}  |\n";
+}

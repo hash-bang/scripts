@@ -1,0 +1,35 @@
+#!/bin/bash
+# Dump the current battery charge/decharge rate to the terminal as a 2dp floating point number
+
+# Fetch initial data
+POWER_DATA=`upower -i /org/freedesktop/UPower/devices/battery_BAT0`
+
+# Determine POWER_STATE + POWER_STATE_PREFIX
+POWER_DATA_STATE=`echo "$POWER_DATA" | grep 'state:'`
+if echo "$POWER_DATA_STATE" | grep -q 'discharging'; then
+	POWER_STATE=discharging
+	POWER_STATE_PREFIX=🢃
+elif echo "$POWER_DATA_STATE" | grep -q 'charging'; then
+	POWER_STATE=charging
+	POWER_STATE_PREFIX=🢁
+elif echo "$POWER_DATA_STATE" | grep -q 'fully-charged'; then
+	POWER_STATE=full
+	POWER_STATE_PREFIX=🡆
+else
+	echo "Unknown state type '${POWER_DATA_STATE}'" >&2
+	POWER_STATE=unknown
+	POWER_STATE_PREFIX=?
+fi
+
+# Determine POWER_RATE
+POWER_RATE=`
+	echo "$POWER_DATA" \
+		| grep 'energy-rate:' \
+		| perl -pe 's!^.+?([\d\.]+).*$!sprintf("%.2f", $1)!e'
+`
+
+if [ "$POWER_STATE" == "full" ]; then
+	echo ""
+else
+	echo "${POWER_STATE_PREFIX} ${POWER_RATE} w"
+fi

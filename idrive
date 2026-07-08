@@ -27,7 +27,7 @@ function idriveIsRunning() {
 # Try to close down iDrive politely
 function idriveClose {
 	echo "Stopping iDrive process"
-	sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 stop
+	sudo /opt/IDrive360/Idrivelib/dependencies/python/idrive360 stop
 
 	echo "Stop iDrive cron system unit"
 	sudo systemctl stop idrive360cron
@@ -81,11 +81,11 @@ case "$CMD" in
 		fi
 
 		echo "Starting main iDrive process"
-		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 6
+		sudo /opt/IDrive360/Idrivelib/dependencies/python/idrive360 6
 		echo
 
 		echo "Installing Cron system unit"
-		sudo /opt/idrive360/Idrivelib/dependencies/python/idrive360 7
+		sudo /opt/IDrive360/Idrivelib/dependencies/python/idrive360 7
 		echo
 
 		echo "Starting Cron unit"

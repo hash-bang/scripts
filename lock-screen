@@ -1,0 +1,6 @@
+#!/bin/bash
+# Lock the screen via the standard XFCE4 locking system
+# Usage: lock-screen
+
+echo "Locking screen"
+xflock4 &

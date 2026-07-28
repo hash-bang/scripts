@@ -1,7 +1,0 @@
-#!/bin/bash
-# Usage: kill-firefox
-# Simple script to restart Firefox
-killall firefox
-pkill firefox
-killall -9 firefox
-pkill -9 firefox

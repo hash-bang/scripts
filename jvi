@@ -1,6 +1,6 @@
 #!/bin/bash
 # Open a JSON pipeline within VIM
-# Usage: jvi
+# Usage: DATA-FEED | jvi
 
 FILE=`mktemp --suffix .json`
 echo "Saving to '$FILE'..."

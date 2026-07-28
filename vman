@@ -1,0 +1,14 @@
+#!/bin/bash
+# Open a Man page directly in NeoVim
+#
+# Usage: vman <PAGE>
+
+if [ -z "$1" ]; then
+	echo "No man page reference given"
+	exit 1
+fi
+
+nvim \
+	-c "Man ${1}" \
+	-c 'only' \
+	-c 'AerialOpen'

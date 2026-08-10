@@ -1,16 +1,35 @@
 #!/bin/bash
 # Grep a list of PM2 processes for a string
-# Usage: pm2-grep <glob>
+# Usage: pm2-grep <grep-expr>
 
-# Default action is to print matching packages only
-OUTPUT=list
+HELP="
+pm2-grep [options...] [grep-expr]
+
+Grep PM2 process names, returning matches
+
+[grep-expr]              Grep expression to search for or literal process name
+
+-0, --print0             Output as a null-terminated list (useful with 'pm2-grep -0 THING | xargs -0 CMD')
+
+-q, --quiet              Grep but show no output, only populate the exit code if there was at least one match
+
+-h, --help               Show command line help
+"
+
+# Defaults {{{
+ARG_OUTPUT=list
+# }}}
 
 # Argument processing {{{
 PARAMS=""
 while (( "$#" )); do
 	case "$1" in
-		-1)
-			OUTPUT=1
+		-0|--print0)
+			ARG_OUTPUT=null
+			shift
+			;;
+		-q|--quiet)
+			ARG_OUTPUT=quiet
 			shift
 			;;
 		--) # end argument parsing
@@ -30,10 +49,24 @@ done
 PARAMS=${PARAMS## } # remove leading spaces
 # }}}
 
-PROCS=`pm2 list -m | perl -ne 's/^\+--- // && print if m/^\+--- /' | egrep "$PARAMS"`
+# Fetch PM2 list, format into a list + grep
+PROCS=`pm2 list -m \
+	| perl -ne 's/^\+--- // && print if m/^\+--- /' \
+	| grep "$PARAMS"`
 
-if [ "$OUTPUT" == "list" ]; then
+if [ -z "$PROCS" ]; then
+	# No procs to list - exit with error code
+	exit 1
+elif [ "$ARG_OUTPUT" == "list" ]; then
+	# Output as newline-terminated list
 	echo "$PROCS"
-elif [ "$OUTPUT" == "1" ]; then
-	echo "$PROCS" | tr '\n' ' '
+elif [ "$ARG_OUTPUT" == "null" ]; then
+	# Output null encoded strings
+	echo "$PROCS" | tr '\n' '\0'
+elif [ "$ARG_OUTPUT" == "quiet" ]; then
+	# Quiet mode - above check shoudl already exit with non-zero exit code if nothing was found
+	exit 0
+else
+	echo "Unknown output mode [${ARG_OUTPUT}]"
+	exit 1
 fi

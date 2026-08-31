@@ -1,0 +1,19 @@
+#!/bin/bash
+# Simple bash script to check for and reapply Sysctl variables
+#
+# Usage (within cron):
+# @hourly cronic /home/mc/Scripts/fix-sysctl-limits
+
+
+SYSCTL_KEY='fs.inotify.max_user_watches'
+SYSCTL_KEY_EXPECTED=999999999
+INOTIFY_LIMIT=$(sysctl -n "$SYSCTL_KEY")
+
+if [ "${INOTIFY_LIMIT}" -lt "${SYSCTL_KEY_EXPECTED}" ]; then
+	echo "SysCtl is out of sync, reapplying..."
+	sudo sysctl -w "${SYSCTL_KEY}=${SYSCTL_KEY_EXPECTED}"
+	sudo sysctl -w fs.inotify.max_user_instances=8192
+	sudo sysctl -w fs.inotify.max_queued_events=16384
+else
+	echo "SysCtl responding correctly"
+fi

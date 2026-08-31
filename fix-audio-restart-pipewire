@@ -1,0 +1,5 @@
+#!/bin/bash
+# Fix Pipewire crashing or being a pain
+# Usage: fix-audio-restart-pipewire
+
+systemctl --user restart pipewire-pulse.service

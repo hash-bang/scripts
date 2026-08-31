@@ -1,0 +1,36 @@
+#!/bin/bash
+# Fixed sticky keys that are stuck down
+
+# Set the display to the primary
+export DISPLAY=:0.0
+
+# Unstick various keys
+xdotool keyup Alt_L Alt_R Control_L Control_R Shift_L Shift_R
+
+# Release Caps, Num, Scroll and Compose Lock keys
+declare -A LOCK_BIT=(
+	[caps]=1
+	[num]=2
+	[scroll]=4
+	[compose]=8
+)
+
+declare -A LOCK_KEY=(
+	[caps]=Caps_Lock
+	[num]=Num_Lock
+	[scroll]=Scroll_Lock
+	[compose]=Multi_key
+)
+
+lock_on() {
+	local mask=$(xset q | sed -n 's/.*LED mask:[[:space:]]*//p')
+	(( 0x$mask & ${LOCK_BIT[$1]:-0} ))
+}
+
+release_locks() {
+	local name
+	for name in "${@:-${!LOCK_BIT[@]}}"; do
+		lock_on "$name" && xdotool key "${LOCK_KEY[$name]}"
+	done
+}
+release_locks

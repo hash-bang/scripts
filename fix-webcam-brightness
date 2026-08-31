@@ -1,0 +1,32 @@
+#!/bin/bash
+# Set various webcam options while running
+# Usage: fix-webcam-brightness [gamma:72-500] [brightness:0-255]
+# 
+# Use `v4l2-ctl --list-ctrls-menus` to see all options
+
+# Settings
+WEBCAM=/dev/video2
+
+# Gamma = 72 - 500 with regular default of 113
+WEBCAM_GAMMA=${1:-100}
+
+# Brightness = -64 - 64 with regaular default of 10
+WEBCAM_BRIGHTNESS=${2:--20}
+
+# Contrast = 0 - 64 with default of 38
+WEBCAM_CONTRAST=38
+
+
+if [ ! -e "$WEBCAM" ]; then
+	echo "Cannot locate webcam device $WEBCAM"
+	exit 1
+fi
+
+echo "Setting Gamma = $WEBCAM_GAMMA, Brightness = $WEBCAM_BRIGHTNESS, Contrast = $WEBCAM_CONTRAST"
+v4l2-ctl -d "$WEBCAM" \
+	--set-ctrl=brightness=$WEBCAM_BRIGHTNESS \
+	--set-ctrl=contrast=$WEBCAM_CONTRAST \
+	--set-ctrl=gamma=$WEBCAM_GAMMA \
+	--set-ctrl=white_balance_automatic=1 \
+	--set-ctrl=backlight_compensation=1 \
+

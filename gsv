@@ -1,0 +1,42 @@
+#!/bin/bash
+# Use 'git status' + 'fzf' to pick file(s) to edit in VIM
+#
+# Usage: gsv [pattern]
+
+# Use fd to find files matching the pattern and pipe to fzf
+# Allow multiple selections with tab/shift+tab
+mapfile -t GSV_SELECTED < <(
+		git status --porcelain \
+		| awk -v OFS='\t' '{
+			code = substr($0, 1, 2)
+			path = substr($0, 4)
+			if (path ~ / -> /) sub(/^.* -> /, "", path)   # renames
+
+			if      (code ~ /\?\?/) label = "new"
+			else if (code ~ /D/)    label = "deleted"
+			else if (code ~ /^A/)   label = "added"
+			else if (code ~ /^R/)   label = "renamed"
+			else                    label = "modified"
+
+			staged = (substr(code, 1, 1) ~ /[^ ?]/) ? "staged" : ""
+
+			printf "%-8s\t%-6s\t%s\n", label, staged, path
+		}' \
+		| fzf \
+			--multi \
+			--delimiter='\t' \
+			--with-nth=1,2,3 \
+			--nth=3 \
+			--preview='git diff --color=always -- {3} | grep -q . && git diff --color=always -- {3} || bat --color=always --style=numbers --line-range=:500 -- {3}' \
+			--height 80% \
+			--border \
+		| awk -F'\t' '{print $3}'
+	)
+
+# Check if any files were selected
+if [ "${#GSV_SELECTED[@]}" -gt 0 ]; then
+	# Open each selected file with vi
+	vi "${GSV_SELECTED[@]}"
+else
+	echo "No files selected"
+fi

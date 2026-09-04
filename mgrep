@@ -1,0 +1,171 @@
+#!/bin/bash
+# Greps for modules in a projects package.json file
+# Usage: mgrep [-i|-r] <expression>
+#
+# -a  Auto mode, like '-i' this installs all greppable packages but also removes all prefixes with '-'
+# -l  Grep in one line (useful when using as a sub-shell query)
+# -D  Use devDependencies instead of regular dependencies
+# -i  Bump the matching packages to latest (using `npm i PKG@latest`)
+# -u  Update the matching packages via `npm update` - useful for Git repo linked hashes
+# -r  Remove all matching packages
+# -v  Show the current version of the matching packages
+# -x  Show packages that arn't used (via ripgrep not AST)
+#
+# If expression is omitted or 'ALL', all packages are used
+
+# Branch to exmaine for packages
+BRANCH="dependencies"
+
+# Default action is to print matching packages only
+ACTION="print"
+
+# Argument processing {{{
+PARAMS=""
+while (( "$#" )); do
+	case "$1" in
+		-a)
+			ACTION="auto"
+			shift
+			;;
+		-l)
+			ACTION="linegrep"
+			shift
+			;;
+		-i)
+			ACTION="install"
+			shift
+			;;
+		-u)
+			ACTION="update"
+			shift
+			;;
+		-x)
+			ACTION="unused"
+			shift
+			;;
+		-r)
+			ACTION="remove"
+			shift
+			;;
+		-v)
+			ACTION="version"
+			shift
+			;;
+		-D)
+			BRANCH="devDependencies"
+			shift
+			;;
+		--) # end argument parsing
+			shift
+			break
+			;;
+		-*|--*=) # unsupported flags
+			if [ "$ACTION" == "auto" ]; then
+				PARAMS="$PARAMS $1"
+				shift
+			else
+				echo "Error: Unsupported flag $1" >&2
+				exit 1
+			fi
+			;;
+		*) # preserve positional arguments
+			PARAMS="$PARAMS $1"
+			shift
+			;;
+	esac
+done
+PARAMS=${PARAMS## } # remove leading spaces
+# }}}
+
+while [ ! -e "package.json" ]; do
+	if [ "$PWD" == "/" ]; then
+		echo "Cannot find package.json in this or parent directories"
+		exit 1
+	fi
+	cd ..
+done
+
+source colors
+COLOR_ACTION="${COLOR_BLACK}${COLOR_ON_WHITE}"
+COLOR_PKG="${COLOR_BLUE}"
+BULLET="${COLOR_BBLUE}➤ ${COLOR_RESET}"
+PACKAGES=`cat package.json | o pluck $BRANCH | o map _.toPairs | o columns id version | o select id | o to --csv | tail -n +2 | sort`
+
+IFS=' ' read -a SEARCHPARAMS <<< "${PARAMS}"
+
+# If no search params given, assume 'ALL'
+if (( ${#SEARCHPARAMS[@]} == 0 )); then
+	echo "Searching all packages"
+	SEARCHPARAMS=('ALL')
+fi
+
+for SEARCH in ${SEARCHPARAMS[@]}; do
+
+	# If no arg given above injects "ALL" which should search all
+	if [ "$SEARCH" == 'ALL' ]; then
+		PKG_LIST=$PACKAGES
+	else
+		PKG_LIST=`echo "$PACKAGES" | grep -Fi "$SEARCH"`
+	fi
+
+	for PKG in $PKG_LIST; do
+		case "$ACTION" in
+			"linegrep")
+				echo -n "${PKG} "
+				;;
+			"auto")
+				if [ "${SEARCH:0:1}" == '-' ]; then
+					echo -e "${BULLET}${COLOR_ACTION}Remove${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+					npm remove "$PKG"
+				else
+					echo -e "${BULLET}${COLOR_ACTION}Install latest${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+					npm install --prefer-online --audit=false "$PKG@latest"
+				fi
+				;;
+			"install")
+				echo -e "${BULLET}${COLOR_ACTION}Install latest${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+				npm install --prefer-online --audit=false "$PKG@latest"
+				echo
+				if [ "$?" != 0 ]; then
+					echo "Aborted install due to NPM returning a non-zero exit code"
+					exit 1
+				fi
+				;;
+			"update")
+				echo -e "${BULLET}${COLOR_ACTION}Update${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+				npm update --prefer-online --audit=false "$PKG"
+				echo
+				if [ "$?" != 0 ]; then
+					echo "Aborted update due to NPM returning a non-zero exit code"
+					exit 1
+				fi
+				;;
+			"remove")
+				echo -e "${BULLET}${COLOR_ACTION}Remove${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+				npm remove --audit=false "$PKG"
+				echo
+				if [ "$?" != 0 ]; then
+					echo "Aborted remove due to NPM returning a non-zero exit code"
+					exit 1
+				fi
+				;;
+			"unused")
+				if [ `rg -qP --glob '!package.json' 'require\(.lodash.\)|from .lodash.'; echo "$?"` != 0 ]; then
+					echo "$PKG"
+				fi
+				;;
+			"version")
+				echo -e "${BULLET}${COLOR_ACTION}Query${COLOR_RESET} ${COLOR_PKG}${PKG}${COLOR_RESET}"
+				echo "Installed spec:" `grep "$PKG" package.json | cut -d '"' -f4`
+				echo "NPM version   :" `npm -q show "$PKG" version`
+				echo
+				;;
+			"print")
+				echo "$PKG"
+				;;
+			*)
+				echo "Unknown action: '$ACTION'"
+				;;
+		esac
+	done
+done

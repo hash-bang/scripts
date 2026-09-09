@@ -7,17 +7,21 @@ pm2-grep [options...] [grep-expr]
 
 Grep PM2 process names, returning matches
 
+
 [grep-expr]              Grep expression to search for or literal process name
 
 -0, --print0             Output as a null-terminated list (useful with 'pm2-grep -0 THING | xargs -0 CMD')
 
 -q, --quiet              Grep but show no output, only populate the exit code if there was at least one match
 
+--only <running|stopped> Further filter matches to only running or only stopped PM2 processes
+
 -h, --help               Show command line help
 "
 
 # Defaults {{{
 ARG_OUTPUT=list
+ARG_ONLY=
 # }}}
 
 # Argument processing {{{
@@ -31,6 +35,14 @@ while (( "$#" )); do
 		-q|--quiet)
 			ARG_OUTPUT=quiet
 			shift
+			;;
+		--only)
+			ARG_ONLY="$2"
+			if [ "$ARG_ONLY" != "running" ] && [ "$ARG_ONLY" != "stopped" ]; then
+				echo "Error: --only must be 'running' or 'stopped'" >&2
+				exit 1
+			fi
+			shift 2
 			;;
 		--) # end argument parsing
 			shift
@@ -49,10 +61,22 @@ done
 PARAMS=${PARAMS## } # remove leading spaces
 # }}}
 
-# Fetch PM2 list, format into a list + grep
-PROCS=`pm2 list -m \
-	| perl -ne 's/^\+--- // && print if m/^\+--- /' \
-	| grep "$PARAMS"`
+# Fetch PM2 list as JSON, filter by name + optional status via jq {{{
+JQ_FILTER='.[] | select(.name | test($pattern))'
+JQ_ARGS=(--arg pattern "$PARAMS")
+
+if [ "$ARG_ONLY" == "running" ]; then
+	JQ_FILTER="$JQ_FILTER | select(.pm2_env.status == \$status)"
+	JQ_ARGS+=(--arg status "online")
+elif [ "$ARG_ONLY" == "stopped" ]; then
+	JQ_FILTER="$JQ_FILTER | select(.pm2_env.status == \$status)"
+	JQ_ARGS+=(--arg status "stopped")
+fi
+
+JQ_FILTER="$JQ_FILTER | .name"
+
+PROCS=`pm2 jlist | jq -r "${JQ_ARGS[@]}" "$JQ_FILTER"`
+# }}}
 
 if [ -z "$PROCS" ]; then
 	# No procs to list - exit with error code

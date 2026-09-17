@@ -4,8 +4,20 @@
 # Set the display to the primary
 export DISPLAY=:0.0
 
-# Unstick various keys
-xdotool keyup Alt_L Alt_R Control_L Control_R Shift_L Shift_R
+# Unstick any key that's currently held down, not just modifiers.
+# Query the core keyboard's actual key state (XQueryKeymap, via `xinput
+# query-state`) so a jam on ANY keycode gets caught, not just a fixed list.
+release_held_keys() {
+	local KEYBOARD_ID
+	local KEYCODES
+	KEYBOARD_ID=$(xinput list --id-only 'Virtual core keyboard')
+	KEYCODES=$(xinput query-state "$KEYBOARD_ID" | awk -F'[][=]' '$1 == "key" && $4 == "down" {print $2}')
+	if [[ -n "$KEYCODES" ]]; then
+		echo "Releasing held keycodes: $KEYCODES"
+		xdotool keyup $KEYCODES
+	fi
+}
+release_held_keys
 
 # Release Caps, Num, Scroll and Compose Lock keys
 declare -A LOCK_BIT=(
@@ -23,14 +35,17 @@ declare -A LOCK_KEY=(
 )
 
 lock_on() {
-	local mask=$(xset q | sed -n 's/.*LED mask:[[:space:]]*//p')
-	(( 0x$mask & ${LOCK_BIT[$1]:-0} ))
+	local MASK=$(xset q | sed -n 's/.*LED mask:[[:space:]]*//p')
+	(( 0x$MASK & ${LOCK_BIT[$1]:-0} ))
 }
 
 release_locks() {
-	local name
-	for name in "${@:-${!LOCK_BIT[@]}}"; do
-		lock_on "$name" && xdotool key "${LOCK_KEY[$name]}"
+	local NAME
+	for NAME in "${@:-${!LOCK_BIT[@]}}"; do
+		if lock_on "$NAME"; then
+			echo "Releasing ${LOCK_KEY[$NAME]}"
+			xdotool key "${LOCK_KEY[$NAME]}"
+		fi
 	done
 }
 release_locks

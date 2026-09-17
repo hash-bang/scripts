@@ -8,10 +8,14 @@ export DISPLAY=:0.0
 # Query the core keyboard's actual key state (XQueryKeymap, via `xinput
 # query-state`) so a jam on ANY keycode gets caught, not just a fixed list.
 release_held_keys() {
-	local KEYBOARD_ID
+	local KEYBOARD_IDS
+	local ID
 	local KEYCODES
-	KEYBOARD_ID=$(xinput list --id-only 'Virtual core keyboard')
-	KEYCODES=$(xinput query-state "$KEYBOARD_ID" | awk -F'[][=]' '$1 == "key" && $4 == "down" {print $2}')
+	# `xinput query-state` only works on slave (physical) devices, not the
+	# master keyboard, so check every logical keyboard device rather than
+	# trying to guess a single "the" keyboard id.
+	KEYBOARD_IDS=$(xinput list | grep -i 'slave *keyboard' | grep -oP '(?<=id=)[0-9]+')
+	KEYCODES=$(for ID in $KEYBOARD_IDS; do xinput query-state "$ID" 2>/dev/null | grep '=down$'; done | grep -oE '[0-9]+' | sort -un)
 	if [[ -n "$KEYCODES" ]]; then
 		echo "Releasing held keycodes: $KEYCODES"
 		xdotool keyup $KEYCODES

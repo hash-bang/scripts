@@ -1,0 +1,25 @@
+#!/bin/bash
+# Output the letter of the alphabet corresponding to a zero-based offset
+# Offsets 0-25 map to a-z, 26-51 map to A-Z
+#
+# Usage: alphaoffset <OFFSET>
+
+# Exit on all errors
+set -euo pipefail
+
+OFFSET=${1:-}
+
+if [[ ! "$OFFSET" =~ ^[0-9]+$ ]]; then
+	echo "Usage: alphaoffset <OFFSET> - offset must be a non-negative integer" >&2
+	exit 1
+fi
+
+OFFSET=$((10#$OFFSET))
+
+if (( OFFSET > 51 )); then
+	echo "Offset '${OFFSET}' is out of range (0-51)" >&2
+	exit 1
+fi
+
+LETTERS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+echo "${LETTERS:$OFFSET:1}"

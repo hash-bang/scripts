@@ -1,0 +1,4 @@
+#!/bin/bash
+# Quickly show the Mega-backup status
+
+mega-backup -lh && mega-transfers && mega-du -h /backups/Taz
